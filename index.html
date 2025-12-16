@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>积分系统</title>
+    <meta name="description" content="终极积分系统 - 专为儿童设计的积分管理系统">
+    <meta name="keywords" content="积分系统,儿童教育,积分管理,奖励系统">
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+            margin: 20px;
+        }
+        .logo {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        .description {
+            color: #666;
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+        .features {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            text-align: left;
+        }
+        .feature {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .feature:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+        }
+        .feature h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        .feature p {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">⭐</div>
+        <h1>终极积分系统</h1>
+        <p class="description">
+            专为儿童设计的积分管理系统<br>
+            支持本地存储、云端备份、成就解锁<br>
+            让积分管理变得简单有趣！
+        </p>
+        <a href="ultimate-points-system-fixed.html" class="btn">🚀 立即使用积分系统</a>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>📊 积分管理</h3>
+                <p>简单的积分增加/减少操作，支持多种原因分类</p>
+            </div>
+            <div class="feature">
+                <h3>🏆 成就系统</h3>
+                <p>25+种成就解锁，激励孩子持续进步</p>
+            </div>
+            <div class="feature">
+                <h3>📈 数据分析</h3>
+                <p>可视化图表展示积分趋势和统计数据</p>
+            </div>
+            <div class="feature">
+                <h3>☁️ 云端备份</h3>
+                <p>集成坚果云WebDAV，数据安全有保障</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 添加一些交互效果
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.container');
+            const features = document.querySelectorAll('.feature');
+            
+            // 延迟显示动画
+            setTimeout(() => {
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 100);
+            
+            features.forEach((feature, index) => {
+                setTimeout(() => {
+                    feature.style.opacity = '1';
+                    feature.style.transform = 'translateY(0)';
+                }, 200 + index * 100);
+            });
+        });
+    </script>
+    
+    <style>
+        .container, .feature {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+        }
+    </style>
+</body>
+</html>
