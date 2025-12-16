@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>WebDAV Client Test Suite</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; line-height: 1.6; }
+        .test-group { margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; padding: 15px; }
+        .test-group h3 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .test-case { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 4px; display: flex; justify-content: space-between; }
+        .pass { color: green; font-weight: bold; }
+        .fail { color: red; font-weight: bold; }
+        .summary { margin-top: 20px; padding: 20px; background: #e9ecef; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h1>🛠️ WebDAV Client 单元测试</h1>
+    <div id="test-results"></div>
+    <div id="summary" class="summary"></div>
+
+    <script>
+        // 模拟环境
+        const localStorageMock = (function() {
+            let store = {};
+            return {
+                getItem: function(key) { return store[key] || null; },
+                setItem: function(key, value) { store[key] = value.toString(); },
+                clear: function() { store = {}; }
+            };
+        })();
+
+        Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+
+        // 模拟 UI 元素
+        document.body.insertAdjacentHTML('beforeend', `
+            <div id="hidden-ui" style="display:none">
+                <input id="davServerUrl" value="https://dav.jianguoyun.com/dav/">
+                <input id="davProxyUrl" value="">
+                <input id="davUsername" value="test@example.com">
+                <input id="davPassword" value="password123">
+                <input type="checkbox" id="davAutoSync">
+                <select id="davConflictStrategy"><option value="newest-wins">最新数据优先</option></select>
+                <div id="davConnectionStatus"><span class="sync-text"></span></div>
+                <div id="mainSyncIcon"></div><div id="mainSyncText"></div><div id="mainSyncStatus"></div><div id="lastSyncTime"></div>
+            </div>
+        `);
+
+        // 模拟 showToast
+        window.showToast = console.log;
+        window.closeWebDAVConfig = () => {};
+
+        // 复制 NutcloudWebDAVClient 类定义 (从主文件)
+        class NutcloudWebDAVClient {
+            constructor() {
+                this.config = this.loadConfig();
+                this.isSyncing = false;
+            }
+
+            loadConfig() {
+                const stored = localStorage.getItem('webdav_config');
+                return stored ? JSON.parse(stored) : {
+                    serverUrl: 'https://dav.jianguoyun.com/dav/',
+                    proxyUrl: '',
+                    username: '',
+                    password: '',
+                    autoSync: false,
+                    conflictStrategy: 'newest-wins'
+                };
+            }
+
+            saveConfig() {
+                const serverUrl = document.getElementById('davServerUrl').value.trim();
+                const proxyUrl = document.getElementById('davProxyUrl').value.trim();
+                const username = document.getElementById('davUsername').value.trim();
+                const password = document.getElementById('davPassword').value.trim();
+                const autoSync = document.getElementById('davAutoSync').checked;
+                const conflictStrategy = document.getElementById('davConflictStrategy').value;
+
+                const encryptedPassword = btoa(password);
+
+                this.config = {
+                    serverUrl,
+                    proxyUrl,
+                    username,
+                    password: encryptedPassword,
+                    autoSync,
+                    conflictStrategy
+                };
+
+                localStorage.setItem('webdav_config', JSON.stringify(this.config));
+            }
+
+            getAuthHeader() {
+                try {
+                    const password = atob(this.config.password);
+                    return 'Basic ' + btoa(this.config.username + ':' + password);
+                } catch (e) {
+                    return '';
+                }
+            }
+
+            getRequestUrl(path = '') {
+                if (path && !path.startsWith('/')) path = '/' + path;
+                
+                if (this.config.proxyUrl) {
+                    let proxyUrl = this.config.proxyUrl;
+                    if (proxyUrl.endsWith('/')) proxyUrl = proxyUrl.slice(0, -1);
+                    return proxyUrl + path;
+                }
+                
+                let serverUrl = this.config.serverUrl;
+                if (serverUrl.endsWith('/')) serverUrl = serverUrl.slice(0, -1);
+                return serverUrl + path;
+            }
+
+            getHeaders() {
+                const headers = {
+                    'Authorization': this.getAuthHeader()
+                };
+                if (this.config.proxyUrl) {
+                    let serverUrl = this.config.serverUrl;
+                    if (serverUrl.endsWith('/')) serverUrl = serverUrl.slice(0, -1);
+                    headers['X-Target-Url'] = serverUrl;
+                }
+                return headers;
+            }
+
+            async resolveConflict(local, remote) {
+                const strategy = this.config.conflictStrategy;
+                if (strategy === 'local-wins') return local;
+                if (strategy === 'remote-wins') return remote;
+                
+                const localTime = new Date(local.lastUpdated || 0).getTime();
+                const remoteTime = new Date(remote.lastUpdated || 0).getTime();
+                
+                return remoteTime > localTime ? remote : local;
+            }
+            
+            updateSyncStatus() {} // Mock
+        }
+
+        // 测试框架
+        const tests = [];
+        function test(name, fn) { tests.push({ name, fn }); }
+        
+        function assert(condition, message) {
+            if (!condition) throw new Error(message || "Assertion failed");
+        }
+
+        function assertEqual(actual, expected, message) {
+            if (actual !== expected) throw new Error(`${message || ""} (Expected: ${expected}, Got: ${actual})`);
+        }
+
+        // --- 测试用例 ---
+
+        test("默认配置加载", () => {
+            localStorage.clear();
+            const client = new NutcloudWebDAVClient();
+            assert(client.config.serverUrl.includes('jianguoyun'), "默认包含坚果云URL");
+            assertEqual(client.config.username, '', "默认用户名为空");
+        });
+
+        test("配置保存与加密", () => {
+            const client = new NutcloudWebDAVClient();
+            client.saveConfig(); // 使用模拟DOM中的值
+            
+            const saved = JSON.parse(localStorage.getItem('webdav_config'));
+            assertEqual(saved.username, 'test@example.com', "用户名保存正确");
+            assert(saved.password !== 'password123', "密码已加密");
+            assertEqual(atob(saved.password), 'password123', "密码可解密");
+        });
+
+        test("Auth Header 生成", () => {
+            const client = new NutcloudWebDAVClient();
+            client.saveConfig();
+            
+            const header = client.getAuthHeader();
+            const expected = 'Basic ' + btoa('test@example.com:password123');
+            assertEqual(header, expected, "Auth Header 生成正确");
+        });
+
+        test("URL 生成 (直连模式)", () => {
+            const client = new NutcloudWebDAVClient();
+            client.config.serverUrl = 'https://dav.test.com/';
+            client.config.proxyUrl = '';
+            
+            assertEqual(client.getRequestUrl('file.json'), 'https://dav.test.com/file.json', "基本URL拼接正确");
+            assertEqual(client.getRequestUrl('/file.json'), 'https://dav.test.com/file.json', "处理重复斜杠");
+        });
+
+        test("URL 生成 (代理模式)", () => {
+            const client = new NutcloudWebDAVClient();
+            client.config.serverUrl = 'https://dav.test.com/';
+            client.config.proxyUrl = 'https://proxy.com/api';
+            
+            assertEqual(client.getRequestUrl('file.json'), 'https://proxy.com/api/file.json', "代理URL优先");
+            
+            const headers = client.getHeaders();
+            assertEqual(headers['X-Target-Url'], 'https://dav.test.com', "包含目标URL头");
+        });
+
+        test("冲突解决 (最新优先)", async () => {
+            const client = new NutcloudWebDAVClient();
+            client.config.conflictStrategy = 'newest-wins';
+            
+            const oldData = { lastUpdated: '2023-01-01T00:00:00Z', v: 1 };
+            const newData = { lastUpdated: '2023-01-02T00:00:00Z', v: 2 };
+            
+            const result1 = await client.resolveConflict(oldData, newData);
+            assertEqual(result1.v, 2, "应选择较新的远程数据");
+            
+            const result2 = await client.resolveConflict(newData, oldData);
+            assertEqual(result2.v, 2, "应选择较新的本地数据");
+        });
+
+        test("冲突解决 (本地优先)", async () => {
+            const client = new NutcloudWebDAVClient();
+            client.config.conflictStrategy = 'local-wins';
+            
+            const local = { v: 'local' };
+            const remote = { v: 'remote' };
+            
+            const result = await client.resolveConflict(local, remote);
+            assertEqual(result.v, 'local', "应强制选择本地数据");
+        });
+
+        // --- 运行测试 ---
+        async function runTests() {
+            const resultsEl = document.getElementById('test-results');
+            const summaryEl = document.getElementById('summary');
+            let passed = 0;
+            let failed = 0;
+
+            for (const t of tests) {
+                const groupEl = document.createElement('div');
+                groupEl.className = 'test-group';
+                
+                try {
+                    await t.fn();
+                    groupEl.innerHTML = `<div class="test-case"><span>${t.name}</span><span class="pass">✅ PASS</span></div>`;
+                    passed++;
+                } catch (e) {
+                    console.error(e);
+                    groupEl.innerHTML = `<div class="test-case"><span>${t.name}</span><span class="fail">❌ FAIL: ${e.message}</span></div>`;
+                    failed++;
+                }
+                resultsEl.appendChild(groupEl);
+            }
+
+            summaryEl.innerHTML = `
+                <h3>测试总结</h3>
+                <p>总计: ${tests.length}</p>
+                <p style="color: green">通过: ${passed}</p>
+                <p style="color: red">失败: ${failed}</p>
+            `;
+        }
+
+        runTests();
+    </script>
+</body>
+</html>

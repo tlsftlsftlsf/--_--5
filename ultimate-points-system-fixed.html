@@ -2196,6 +2196,321 @@
                 grid-template-columns: 1fr;
             }
         }
+        /* WebDAV同步功能样式 */
+        .webdav-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10001; /* 高于管理员面板 */
+            align-items: center;
+            justify-content: center;
+        }
+
+        .webdav-modal.show {
+            display: flex;
+        }
+
+        .webdav-content {
+            background: var(--theme-bg);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            max-width: 500px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: var(--card-shadow);
+        }
+
+        .webdav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .webdav-header h3 {
+            margin: 0;
+            color: var(--theme-text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .config-section {
+            margin-bottom: 25px;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .config-section h4 {
+            margin-bottom: 15px;
+            color: var(--theme-text);
+            font-size: 1.1em;
+            border-left: 4px solid var(--theme-accent);
+            padding-left: 10px;
+        }
+
+        .sync-status-bar {
+            background: linear-gradient(to right, #f8f9fa, #e9ecef);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.9em;
+            border: 1px solid #dee2e6;
+        }
+
+        .sync-status-bar.success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: #10b981;
+            color: #059669;
+        }
+
+        .sync-status-bar.error {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444;
+            color: #dc2626;
+        }
+
+        .sync-status-bar.syncing {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+            color: #2563eb;
+        }
+
+        .sync-icon {
+            font-size: 1.2em;
+            margin-right: 8px;
+        }
+
+        .syncing .sync-icon {
+            animation: rotate 1s linear infinite;
+            display: inline-block;
+        }
+
+        .config-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-dav {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-dav-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-dav-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-dav-test {
+            background: var(--info-gradient);
+            color: white;
+        }
+
+        /* 进度条样式 */
+        .progress-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: #e5e7eb;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-gradient);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .webdav-content {
+                width: 95%;
+                padding: 20px;
+            }
+            
+            .config-actions {
+                flex-direction: column;
+            }
+        }
+        .webdav-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .webdav-modal.show {
+            display: flex;
+        }
+
+        .webdav-content {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .webdav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .config-section {
+            margin-bottom: 25px;
+        }
+
+        .config-section h4 {
+            margin-bottom: 15px;
+            color: var(--theme-text);
+            font-size: 16px;
+        }
+
+        .sync-status-bar {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .sync-status-bar.success {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
+        }
+
+        .sync-status-bar.error {
+            border-color: #dc3545;
+            background: rgba(220, 53, 69, 0.1);
+        }
+
+        .sync-status-bar.syncing {
+            border-color: #007bff;
+            background: rgba(0, 123, 255, 0.1);
+        }
+
+        .sync-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sync-icon {
+            font-size: 20px;
+        }
+
+        .config-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn-dav {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-dav-test {
+            background: rgba(255,255,255,0.1);
+            color: var(--theme-text);
+        }
+
+        .btn-dav-primary {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,123,255,0.3);
+        }
+
+        .progress-container {
+            margin: 20px 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            height: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 100%;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--success-gradient);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
     </style>
 </head>
 <body>
@@ -2526,6 +2841,87 @@
         </div>
     </div>
 
+    <!-- WebDAV配置弹窗 -->
+    <div id="webdavConfigDialog" class="webdav-modal">
+        <div class="webdav-content">
+            <div class="webdav-header">
+                <h3>☁️ 坚果云WebDAV配置</h3>
+                <button class="btn-clear" onclick="closeWebDAVConfig()" style="padding: 8px 15px; font-size: 14px;">✕ 关闭</button>
+            </div>
+            
+            <div class="config-section">
+                <h4>连接设置</h4>
+                <div class="input-group">
+                    <label>服务器地址</label>
+                    <input type="text" id="davServerUrl" value="https://dav.jianguoyun.com/dav/" placeholder="WebDAV服务器地址">
+                </div>
+                <div class="input-group">
+                    <label>代理服务地址 (解决跨域问题)</label>
+                    <input type="text" id="davProxyUrl" placeholder="例如: https://your-proxy.vercel.app/api/proxy" value="">
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        如果不使用代理，请确保浏览器安装了允许跨域的扩展，或服务器支持CORS。
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h4>认证信息</h4>
+                <div class="input-group">
+                    <label>坚果云账号 (邮箱)</label>
+                    <input type="text" id="davUsername" placeholder="您的坚果云注册邮箱">
+                </div>
+                <div class="input-group">
+                    <label>应用专用密码</label>
+                    <input type="password" id="davPassword" placeholder="请在坚果云安全设置中生成的应用密码">
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        注意：这是应用专用密码，不是登录密码。
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h4>同步设置</h4>
+                <div class="input-group">
+                    <label>冲突解决策略</label>
+                    <select id="davConflictStrategy">
+                        <option value="newest-wins">最新数据优先 (推荐)</option>
+                        <option value="local-wins">本地数据优先</option>
+                        <option value="remote-wins">云端数据优先</option>
+                        <option value="manual">手动解决</option>
+                    </select>
+                </div>
+                <div class="input-group" style="flex-direction: row; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="davAutoSync" style="width: auto;">
+                    <label for="davAutoSync" style="margin: 0;">启用自动同步 (数据变更时自动上传)</label>
+                </div>
+            </div>
+            
+            <div id="davConnectionStatus" class="sync-status-bar" style="display: none;">
+                <span class="sync-icon">🔄</span>
+                <span class="sync-text">正在测试连接...</span>
+            </div>
+            
+            <div class="config-actions">
+                <button class="btn-dav btn-dav-test" onclick="webdavClient.testConnection()">🔗 测试连接</button>
+                <button class="btn-dav btn-dav-primary" onclick="webdavClient.saveConfig()">💾 保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 同步进度弹窗 -->
+    <div id="syncProgressModal" class="webdav-modal">
+        <div class="webdav-content" style="max-width: 400px;">
+            <h3 style="text-align: center; margin-bottom: 20px;">☁️ 正在同步数据</h3>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div id="syncProgressFill" class="progress-fill"></div>
+                </div>
+                <div id="syncProgressText" class="progress-text">准备中...</div>
+            </div>
+            <div id="syncStepInfo" style="text-align: center; font-size: 14px; color: #666;"></div>
+        </div>
+    </div>
+
     <!-- 家长控制面板 -->
     <div class="admin-panel" id="adminPanel">
         <div class="admin-content">
@@ -2570,16 +2966,36 @@
                         <button class="btn btn-admin" onclick="showTextImportDialog()" style="width: 100%; background: var(--warning-gradient);">📋 文本导入</button>
                     </div>
                     <div class="input-group">
-                        <label>云端备份</label>
-                        <button class="btn btn-save-settings" onclick="showNutcloudConfigDialog()" style="width: 100%; background: var(--primary-gradient);">☁️ 坚果云备份</button>
-                    </div>
-                    <div class="input-group">
-                        <label>云端操作</label>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn btn-export" onclick="uploadToNutcloud()" style="flex: 1; background: var(--success-gradient);">⬆️ 上传到云端</button>
-                            <button class="btn btn-admin" onclick="downloadFromNutcloud()" style="flex: 1; background: var(--info-gradient);">⬇️ 从云端下载</button>
+                        <label>本地备份说明</label>
+                        <div style="padding: 15px; background: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; border-radius: 8px; font-size: 14px; line-height: 1.5;">
+                            <div style="color: #155724; margin-bottom: 8px;">
+                                <strong>✅ 本地备份功能</strong>
+                            </div>
+                            <div style="color: #6c757d;">
+                                系统支持本地导出和导入功能，确保您的数据安全。<br>
+                                <strong>推荐定期导出数据</strong>进行备份和恢复。
+                            </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h3 style="margin-bottom: 20px; color: var(--theme-text);">☁️ 云端同步</h3>
+                
+                <!-- 同步状态显示 -->
+                <div id="mainSyncStatus" class="sync-status-bar">
+                    <div class="sync-info">
+                        <span id="mainSyncIcon" class="sync-icon">☁️</span>
+                        <span id="mainSyncText" class="sync-text">未配置云端同步</span>
+                    </div>
+                    <div id="lastSyncTime" style="font-size: 12px; color: #666;"></div>
+                </div>
+
+                <div class="settings-grid" style="margin-top: 15px;">
+                    <button class="btn btn-admin" onclick="openWebDAVConfig()" style="background: var(--info-gradient);">⚙️ 配置同步</button>
+                    <button class="btn btn-export" onclick="webdavClient.sync()" style="background: var(--primary-gradient);">🔄 立即同步</button>
+                    <button class="btn btn-save-settings" onclick="webdavClient.restoreFromCloud()" style="background: var(--warning-gradient);">⬇️ 从云端恢复</button>
                 </div>
             </div>
 
@@ -2602,13 +3018,422 @@
     <script>
         console.log('终极积分系统脚本开始加载...');
         
-        // 坚果云WebDAV配置
-        let nutcloudConfig = {
-            server: 'https://dav.jianguoyun.com/dav/',
-            username: '',
-            appPassword: '',
-            backupPath: '/积分系统备份/'
-        };
+
+
+        // 全局WebDAV客户端实例
+        let webdavClient = null;
+
+        // WebDAV客户端类
+        class NutcloudWebDAVClient {
+            constructor() {
+                this.config = this.loadConfig();
+                this.isSyncing = false;
+            }
+
+            // 加载配置
+            loadConfig() {
+                const stored = localStorage.getItem('webdav_config');
+                return stored ? JSON.parse(stored) : {
+                    serverUrl: 'https://dav.jianguoyun.com/dav/',
+                    proxyUrl: '',
+                    username: '',
+                    password: '', // 加密存储
+                    autoSync: false,
+                    conflictStrategy: 'newest-wins'
+                };
+            }
+
+            // 保存配置
+            saveConfig() {
+                const serverUrl = document.getElementById('davServerUrl').value.trim();
+                const proxyUrl = document.getElementById('davProxyUrl').value.trim();
+                const username = document.getElementById('davUsername').value.trim();
+                const password = document.getElementById('davPassword').value.trim();
+                const autoSync = document.getElementById('davAutoSync').checked;
+                const conflictStrategy = document.getElementById('davConflictStrategy').value;
+
+                if (!serverUrl || !username || !password) {
+                    showToast('请填写完整的配置信息', 'error');
+                    return;
+                }
+
+                // 简单的加密存储（实际应用应使用更安全的加密）
+                const encryptedPassword = btoa(password);
+
+                this.config = {
+                    serverUrl,
+                    proxyUrl,
+                    username,
+                    password: encryptedPassword,
+                    autoSync,
+                    conflictStrategy
+                };
+
+                localStorage.setItem('webdav_config', JSON.stringify(this.config));
+                showToast('配置已保存');
+                closeWebDAVConfig();
+                this.updateSyncStatus('配置已保存，准备同步');
+                
+                // 首次保存后自动测试连接
+                this.testConnection(true);
+            }
+
+            // 获取认证头
+            getAuthHeader() {
+                try {
+                    const password = atob(this.config.password);
+                    return 'Basic ' + btoa(this.config.username + ':' + password);
+                } catch (e) {
+                    console.error('密码解码失败', e);
+                    return '';
+                }
+            }
+
+            // 获取请求URL（处理代理）
+            getRequestUrl(path = '') {
+                // 确保path以/开头
+                if (path && !path.startsWith('/')) path = '/' + path;
+                
+                if (this.config.proxyUrl) {
+                    // 使用代理：proxyUrl + path
+                    // 代理服务应该处理目标URL的重写
+                    // 假设代理服务接受 ?url= 参数或者直接转发
+                    // 这里我们假设使用标准WebDAV代理模式：/proxy/path
+                    let proxyUrl = this.config.proxyUrl;
+                    if (proxyUrl.endsWith('/')) proxyUrl = proxyUrl.slice(0, -1);
+                    return proxyUrl + path;
+                }
+                
+                let serverUrl = this.config.serverUrl;
+                if (serverUrl.endsWith('/')) serverUrl = serverUrl.slice(0, -1);
+                return serverUrl + path;
+            }
+
+            // 获取请求头
+            getHeaders(method = 'GET') {
+                const headers = {
+                    'Authorization': this.getAuthHeader()
+                };
+                
+                // 如果使用代理，可能需要添加目标URL头
+                if (this.config.proxyUrl) {
+                    let serverUrl = this.config.serverUrl;
+                    if (serverUrl.endsWith('/')) serverUrl = serverUrl.slice(0, -1);
+                    headers['X-Target-Url'] = serverUrl;
+                }
+                
+                return headers;
+            }
+
+            // 测试连接
+            async testConnection(silent = false) {
+                const statusEl = document.getElementById('davConnectionStatus');
+                if (!silent) {
+                    statusEl.style.display = 'flex';
+                    statusEl.className = 'sync-status-bar syncing';
+                    statusEl.querySelector('.sync-text').textContent = '正在连接坚果云...';
+                }
+
+                try {
+                    const url = this.getRequestUrl('/');
+                    console.log('Testing connection to:', url);
+                    
+                    const response = await fetch(url, {
+                        method: 'PROPFIND',
+                        headers: {
+                            ...this.getHeaders(),
+                            'Depth': '0'
+                        }
+                    });
+
+                    if (response.ok) {
+                        if (!silent) {
+                            statusEl.className = 'sync-status-bar success';
+                            statusEl.querySelector('.sync-text').textContent = '连接成功！';
+                        }
+                        this.updateSyncStatus('连接正常', 'success');
+                        return true;
+                    } else {
+                        throw new Error(`服务器响应错误: ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error('Connection failed:', error);
+                    if (!silent) {
+                        statusEl.className = 'sync-status-bar error';
+                        statusEl.querySelector('.sync-text').textContent = '连接失败: ' + error.message;
+                    }
+                    
+                    let errorMsg = '连接失败';
+                    if (error.message.includes('Failed to fetch')) {
+                        errorMsg = '网络错误或跨域限制，请尝试配置代理';
+                    } else if (error.message.includes('401')) {
+                        errorMsg = '认证失败，请检查账号密码';
+                    }
+                    
+                    this.updateSyncStatus(errorMsg, 'error');
+                    if (!silent) showToast(errorMsg, 'error');
+                    return false;
+                }
+            }
+
+            // 上传数据
+            async uploadData(data) {
+                const fileName = 'points_system_backup.json';
+                const url = this.getRequestUrl('/' + fileName);
+                
+                try {
+                    const response = await fetch(url, {
+                        method: 'PUT',
+                        headers: {
+                            ...this.getHeaders(),
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (!response.ok) throw new Error(`上传失败: ${response.status}`);
+                    return true;
+                } catch (error) {
+                    console.error('Upload failed:', error);
+                    throw error;
+                }
+            }
+
+            // 下载数据
+            async downloadData() {
+                const fileName = 'points_system_backup.json';
+                const url = this.getRequestUrl('/' + fileName);
+                
+                try {
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: this.getHeaders()
+                    });
+
+                    if (response.status === 404) return null; // 文件不存在
+                    if (!response.ok) throw new Error(`下载失败: ${response.status}`);
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('Download failed:', error);
+                    throw error;
+                }
+            }
+
+            // 执行同步
+            async sync() {
+                if (this.isSyncing) return;
+                
+                // 检查配置
+                if (!this.config.username) {
+                    showToast('请先配置WebDAV同步', 'info');
+                    openWebDAVConfig();
+                    return;
+                }
+
+                this.isSyncing = true;
+                this.showProgress('正在连接服务器...', 10);
+                this.updateSyncStatus('正在同步...', 'syncing');
+
+                try {
+                    // 1. 下载云端数据
+                    this.showProgress('检查云端数据...', 30);
+                    const cloudData = await this.downloadData();
+                    
+                    // 2. 冲突解决
+                    let finalData = pointsData;
+                    if (cloudData) {
+                        this.showProgress('处理数据合并...', 60);
+                        finalData = await this.resolveConflict(pointsData, cloudData);
+                    }
+                    
+                    // 3. 更新本地数据
+                    if (finalData !== pointsData) {
+                        pointsData = finalData;
+                        saveData();
+                        updateDisplay();
+                        renderHistory();
+                        renderAchievements();
+                    }
+
+                    // 4. 上传最新数据
+                    this.showProgress('上传最新数据...', 80);
+                    // 添加同步元数据
+                    const syncData = {
+                        ...pointsData,
+                        syncMetadata: {
+                            lastSyncTime: new Date().toISOString(),
+                            device: navigator.userAgent,
+                            version: '2.0'
+                        }
+                    };
+                    
+                    await this.uploadData(syncData);
+                    
+                    this.showProgress('同步完成！', 100);
+                    this.updateSyncStatus('同步成功', 'success');
+                    showToast('云端同步完成！');
+                    
+                    setTimeout(() => closeSyncProgress(), 1000);
+                } catch (error) {
+                    console.error('Sync error:', error);
+                    this.updateSyncStatus('同步失败: ' + error.message, 'error');
+                    showToast('同步失败，请检查网络或配置', 'error');
+                    closeSyncProgress();
+                } finally {
+                    this.isSyncing = false;
+                }
+            }
+
+            // 从云端恢复
+            async restoreFromCloud() {
+                if (!confirm('确定要从云端恢复数据吗？这将覆盖当前本地数据。')) return;
+                
+                this.isSyncing = true;
+                this.showProgress('正在下载云端数据...', 30);
+                
+                try {
+                    const cloudData = await this.downloadData();
+                    if (!cloudData) {
+                        throw new Error('云端没有备份文件');
+                    }
+                    
+                    this.showProgress('正在恢复数据...', 80);
+                    pointsData = cloudData;
+                    saveData();
+                    updateDisplay();
+                    renderHistory();
+                    renderAchievements();
+                    checkAchievements();
+                    
+                    this.showProgress('恢复完成！', 100);
+                    showToast('数据已从云端恢复');
+                    setTimeout(() => closeSyncProgress(), 1000);
+                } catch (error) {
+                    showToast('恢复失败: ' + error.message, 'error');
+                    closeSyncProgress();
+                } finally {
+                    this.isSyncing = false;
+                }
+            }
+
+            // 冲突解决
+            async resolveConflict(local, remote) {
+                const strategy = this.config.conflictStrategy;
+                console.log('Resolving conflict using strategy:', strategy);
+                
+                if (strategy === 'local-wins') return local;
+                if (strategy === 'remote-wins') return remote;
+                
+                // 默认：最新数据优先
+                const localTime = new Date(local.lastUpdated || 0).getTime();
+                const remoteTime = new Date(remote.lastUpdated || 0).getTime();
+                
+                // 检查最后同步时间
+                const remoteSyncTime = remote.syncMetadata ? new Date(remote.syncMetadata.lastSyncTime).getTime() : 0;
+                
+                if (remoteTime > localTime) {
+                    console.log('Remote is newer');
+                    return remote;
+                } else {
+                    console.log('Local is newer');
+                    return local;
+                }
+            }
+
+            // 更新状态显示
+            updateSyncStatus(text, status = '') {
+                const iconEl = document.getElementById('mainSyncIcon');
+                const textEl = document.getElementById('mainSyncText');
+                const barEl = document.getElementById('mainSyncStatus');
+                const timeEl = document.getElementById('lastSyncTime');
+                
+                if (textEl) textEl.textContent = text;
+                if (barEl) {
+                    barEl.className = 'sync-status-bar ' + status;
+                    if (status === 'syncing') barEl.classList.add('syncing');
+                }
+                
+                if (status === 'success') {
+                    if (timeEl) timeEl.textContent = '上次同步: ' + new Date().toLocaleString();
+                    if (iconEl) iconEl.textContent = '✅';
+                } else if (status === 'error') {
+                    if (iconEl) iconEl.textContent = '❌';
+                } else if (status === 'syncing') {
+                    if (iconEl) iconEl.textContent = '🔄';
+                } else {
+                    if (iconEl) iconEl.textContent = '☁️';
+                }
+            }
+
+            // 显示进度
+            showProgress(text, percent) {
+                const modal = document.getElementById('syncProgressModal');
+                const fill = document.getElementById('syncProgressFill');
+                const textEl = document.getElementById('syncProgressText');
+                const infoEl = document.getElementById('syncStepInfo');
+                
+                if (modal) {
+                    modal.classList.add('show');
+                    if (fill) fill.style.width = percent + '%';
+                    if (textEl) textEl.textContent = percent + '%';
+                    if (infoEl) infoEl.textContent = text;
+                }
+            }
+        }
+
+        // 配置相关函数
+        function openWebDAVConfig() {
+            const modal = document.getElementById('webdavConfigDialog');
+            modal.classList.add('show');
+            
+            // 填充现有配置
+            if (webdavClient && webdavClient.config) {
+                document.getElementById('davServerUrl').value = webdavClient.config.serverUrl;
+                document.getElementById('davProxyUrl').value = webdavClient.config.proxyUrl || '';
+                document.getElementById('davUsername').value = webdavClient.config.username;
+                document.getElementById('davAutoSync').checked = webdavClient.config.autoSync;
+                document.getElementById('davConflictStrategy').value = webdavClient.config.conflictStrategy;
+                // 密码不回显
+            }
+        }
+
+        function closeWebDAVConfig() {
+            document.getElementById('webdavConfigDialog').classList.remove('show');
+        }
+
+        function closeSyncProgress() {
+            document.getElementById('syncProgressModal').classList.remove('show');
+        }
+
+        // 初始化客户端
+        function initWebDAV() {
+            webdavClient = new NutcloudWebDAVClient();
+            
+            // 如果开启了自动同步，绑定数据变更事件
+            if (webdavClient.config.autoSync) {
+                // Hook saveData function to trigger sync
+                const originalSaveData = saveData;
+                saveData = function() {
+                    originalSaveData.apply(this, arguments);
+                    // 使用防抖，避免频繁同步
+                    if (this.syncTimeout) clearTimeout(this.syncTimeout);
+                    this.syncTimeout = setTimeout(() => {
+                        webdavClient.sync();
+                    }, 5000);
+                };
+            }
+            
+            // 初始状态更新
+            if (webdavClient.config.username) {
+                webdavClient.updateSyncStatus('已配置，点击同步', '');
+            }
+        }
+
+        // 在页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initWebDAV();
+        });
 
         // 全局数据对象
         let pointsData = {
@@ -2837,8 +3662,7 @@
                 // 初始化每日一言
                 initDailyQuote();
                 
-                // 初始化坚果云配置
-                initNutcloudConfig();
+
                 
                 console.log('=== 终极积分系统初始化完成 ===');
                 showToast('🌟 终极积分系统加载完成！');
@@ -5554,662 +6378,9 @@
         
         console.log('终极积分系统脚本执行完成');
 
-        // ================== 坚果云WebDAV功能 ==================
+
         
-        // 加载保存的坚果云配置
-        function loadNutcloudConfig() {
-            try {
-                const saved = localStorage.getItem('nutcloudConfig');
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    nutcloudConfig = { ...nutcloudConfig, ...parsed };
-                }
-            } catch (error) {
-                console.error('加载坚果云配置失败:', error);
-            }
-        }
-        
-        // 保存坚果云配置
-        function saveNutcloudConfig() {
-            try {
-                localStorage.setItem('nutcloudConfig', JSON.stringify(nutcloudConfig));
-            } catch (error) {
-                console.error('保存坚果云配置失败:', error);
-                showToast('配置保存失败', 'error');
-            }
-        }
-        
-        // WebDAV连接测试 - 修复CORS跨域问题
-        async function testWebDAVConnection(config = nutcloudConfig, retryCount = 0) {
-            const maxRetries = 2;
-            
-            if (!config.username || !config.appPassword) {
-                throw new Error('请先配置坚果云账号信息');
-            }
-            
-            try {
-                console.log(`尝试WebDAV连接... (尝试 ${retryCount + 1}/${maxRetries + 1})`);
-                
-                const response = await fetch(config.server, {
-                    method: 'PROPFIND',
-                    mode: 'cors',
-                    credentials: 'omit',
-                    headers: {
-                        'Authorization': 'Basic ' + btoa(config.username + ':' + config.appPassword),
-                        'Depth': '0',
-                        'Content-Type': 'application/xml'
-                    }
-                });
-                
-                if (response.ok) {
-                    console.log('WebDAV连接测试成功');
-                    return true;
-                } else {
-                    // 根据状态码提供更详细的错误信息
-                    let errorMessage = '连接失败';
-                    switch (response.status) {
-                        case 401:
-                            errorMessage = '认证失败，请检查用户名和应用密码是否正确';
-                            break;
-                        case 403:
-                            errorMessage = '访问被拒绝，请检查账号权限';
-                            break;
-                        case 404:
-                            errorMessage = '服务器地址错误或服务不可用';
-                            break;
-                        case 500:
-                            errorMessage = '服务器内部错误，请稍后重试';
-                            break;
-                        default:
-                            errorMessage = `连接失败 (状态码: ${response.status})`;
-                    }
-                    throw new Error(errorMessage);
-                }
-            } catch (error) {
-                console.error('WebDAV连接测试失败:', error);
-                
-                // CORS错误特殊处理
-                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-                    // 如果是CORS错误且还有重试次数，则重试
-                    if (retryCount < maxRetries) {
-                        console.log(`CORS错误，${1000 * (retryCount + 1)}ms后重试...`);
-                        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-                        return testWebDAVConnection(config, retryCount + 1);
-                    }
-                    
-                    const errorDetail = [
-                        '检测到跨域请求被阻止 (CORS Error)',
-                        '',
-                        '可能的解决方案:',
-                        '1. 检查网络连接是否正常',
-                        '2. 尝试刷新页面后重新测试',
-                        '3. 如果问题持续，建议使用本地导出功能备份数据',
-                        '4. 或者尝试使用其他云存储服务',
-                        '',
-                        '技术详情: 浏览器阻止了从GitHub Pages到坚果云的跨域请求'
-                    ].join('\n');
-                    throw new Error(errorDetail);
-                }
-                
-                // 网络错误处理
-                if (error.name === 'TypeError') {
-                    throw new Error('网络连接失败，请检查网络设置或稍后重试');
-                }
-                
-                throw error;
-            }
-        }
-        
-        // 上传文件到坚果云 - 增强错误处理
-        async function uploadToNutcloud(data = pointsData, filename = null) {
-            if (!nutcloudConfig.username || !nutcloudConfig.appPassword) {
-                showToast('请先配置坚果云账号信息', 'error');
-                showNutcloudConfigDialog();
-                return false;
-            }
-            
-            try {
-                showToast('正在连接到坚果云...', 'info');
-                
-                // 测试连接
-                await testWebDAVConnection();
-                
-                const timestamp = new Date().toISOString().split('T')[0];
-                const fileName = filename || `积分数据备份_${timestamp}.json`;
-                const filePath = nutcloudConfig.backupPath + fileName;
-                
-                showToast('正在上传数据...', 'info');
-                
-                const response = await fetch(nutcloudConfig.server + filePath, {
-                    method: 'PUT',
-                    mode: 'cors',
-                    credentials: 'omit',
-                    headers: {
-                        'Authorization': 'Basic ' + btoa(nutcloudConfig.username + ':' + nutcloudConfig.appPassword),
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data, null, 2)
-                });
-                
-                if (response.ok) {
-                    showToast(`数据已成功上传到坚果云！\n文件名: ${fileName}`, 'success');
-                    return true;
-                } else {
-                    let errorMessage = '上传失败';
-                    switch (response.status) {
-                        case 401:
-                            errorMessage = '认证失败，请检查用户名和应用密码';
-                            break;
-                        case 403:
-                            errorMessage = '上传权限不足，请检查账号设置';
-                            break;
-                        case 404:
-                            errorMessage = '目标路径不存在或无法访问';
-                            break;
-                        case 413:
-                            errorMessage = '文件太大，上传失败';
-                            break;
-                        case 507:
-                            errorMessage = '存储空间不足';
-                            break;
-                        default:
-                            errorMessage = `上传失败 (状态码: ${response.status})`;
-                    }
-                    throw new Error(errorMessage);
-                }
-            } catch (error) {
-                console.error('上传到坚果云失败:', error);
-                
-                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-                    showToast('网络连接失败，请检查网络设置或稍后重试\n\n建议使用本地导出功能作为备选方案', 'error');
-                } else {
-                    showToast('上传失败: ' + error.message, 'error');
-                }
-                return false;
-            }
-        }
-        
-        // 从坚果云下载文件 - 增强错误处理
-        async function downloadFromNutcloud() {
-            if (!nutcloudConfig.username || !nutcloudConfig.appPassword) {
-                showToast('请先配置坚果云账号信息', 'error');
-                showNutcloudConfigDialog();
-                return false;
-            }
-            
-            try {
-                showToast('正在连接到坚果云...', 'info');
-                
-                // 测试连接
-                await testWebDAVConnection();
-                
-                // 获取备份文件列表
-                showToast('正在获取文件列表...', 'info');
-                
-                const response = await fetch(nutcloudConfig.server + nutcloudConfig.backupPath, {
-                    method: 'PROPFIND',
-                    mode: 'cors',
-                    credentials: 'omit',
-                    headers: {
-                        'Authorization': 'Basic ' + btoa(nutcloudConfig.username + ':' + nutcloudConfig.appPassword),
-                        'Depth': '1',
-                        'Content-Type': 'application/xml'
-                    }
-                });
-                
-                if (!response.ok) {
-                    let errorMessage = '无法访问备份目录';
-                    switch (response.status) {
-                        case 401:
-                            errorMessage = '认证失败，请检查用户名和应用密码';
-                            break;
-                        case 403:
-                            errorMessage = '访问权限不足，请检查账号设置';
-                            break;
-                        case 404:
-                            errorMessage = '备份目录不存在';
-                            break;
-                        default:
-                            errorMessage = `无法访问备份目录 (状态码: ${response.status})`;
-                    }
-                    throw new Error(errorMessage);
-                }
-                
-                const text = await response.text();
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(text, 'text/xml');
-                
-                // 检查XML解析是否成功
-                const parserError = xmlDoc.getElementsByTagName('parsererror')[0];
-                if (parserError) {
-                    throw new Error('服务器响应格式错误');
-                }
-                
-                const responses = xmlDoc.getElementsByTagName('d:response');
-                
-                const backupFiles = [];
-                for (let i = 0; i < responses.length; i++) {
-                    const href = responses[i].getElementsByTagName('d:href')[0];
-                    if (href) {
-                        const fileName = href.textContent.split('/').pop();
-                        if (fileName && fileName.startsWith('积分数据备份_') && fileName.endsWith('.json')) {
-                            backupFiles.push({
-                                name: fileName,
-                                url: nutcloudConfig.server + href.textContent
-                            });
-                        }
-                    }
-                }
-                
-                if (backupFiles.length === 0) {
-                    showToast('未找到备份文件，请先上传数据到云端', 'error');
-                    return false;
-                }
-                
-                // 显示文件选择对话框
-                showFileSelectionDialog(backupFiles);
-                
-            } catch (error) {
-                console.error('从坚果云下载失败:', error);
-                
-                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-                    showToast('网络连接失败，请检查网络设置或稍后重试\n\n建议使用本地导入功能', 'error');
-                } else {
-                    showToast('下载失败: ' + error.message, 'error');
-                }
-                return false;
-            }
-        }
-        
-        // 显示文件选择对话框
-        function showFileSelectionDialog(files) {
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;
-                z-index: 10000;
-            `;
-            
-            const filesList = files.map(file => `
-                <div style="
-                    padding: 15px; margin: 10px 0; border: 2px solid #dee2e6; border-radius: 12px;
-                    cursor: pointer; transition: all 0.2s ease; background: white;
-                " onclick="selectBackupFile('${file.url}', '${file.name}', this)">
-                    <div style="font-weight: 600; color: var(--theme-text);">${file.name}</div>
-                    <div style="font-size: 12px; color: #6c757d; margin-top: 5px;">点击选择此文件</div>
-                </div>
-            `).join('');
-            
-            modal.innerHTML = `
-                <div style="
-                    background: var(--theme-bg); padding: 30px; border-radius: var(--border-radius);
-                    max-width: 500px; width: 90%; text-align: center; box-shadow: var(--card-shadow);
-                ">
-                    <h3 style="margin-bottom: 20px; color: var(--theme-text);">📁 选择备份文件</h3>
-                    <div style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
-                        ${filesList}
-                    </div>
-                    <button onclick="closeFileSelectionDialog()" style="
-                        padding: 15px 25px; border: 2px solid #dee2e6; border-radius: 12px;
-                        background: white; color: #6c757d; font-weight: 600; cursor: pointer;
-                    ">取消</button>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            
-            // 绑定全局函数
-            window.selectBackupFile = (fileUrl, fileName, element) => {
-                // 高亮选中的文件
-                document.querySelectorAll('[onclick*="selectBackupFile"]').forEach(el => {
-                    el.style.borderColor = '#dee2e6';
-                    el.style.background = 'white';
-                });
-                element.style.borderColor = 'var(--theme-accent)';
-                element.style.background = 'rgba(102, 126, 234, 0.1)';
-                
-                // 下载文件
-                downloadSelectedFile(fileUrl, fileName);
-                closeFileSelectionDialog();
-            };
-            
-            window.closeFileSelectionDialog = () => {
-                document.body.removeChild(modal);
-                delete window.selectBackupFile;
-                delete window.closeFileSelectionDialog;
-            };
-        }
-        
-        // 下载选中的文件 - 增强错误处理
-        async function downloadSelectedFile(fileUrl, fileName) {
-            try {
-                showToast('正在下载文件...', 'info');
-                
-                const response = await fetch(fileUrl, {
-                    method: 'GET',
-                    mode: 'cors',
-                    credentials: 'omit',
-                    headers: {
-                        'Authorization': 'Basic ' + btoa(nutcloudConfig.username + ':' + nutcloudConfig.appPassword)
-                    }
-                });
-                
-                if (!response.ok) {
-                    let errorMessage = '下载失败';
-                    switch (response.status) {
-                        case 401:
-                            errorMessage = '认证失败，请检查用户名和应用密码';
-                            break;
-                        case 403:
-                            errorMessage = '访问被拒绝，无下载权限';
-                            break;
-                        case 404:
-                            errorMessage = '文件不存在或已被删除';
-                            break;
-                        default:
-                            errorMessage = `下载失败 (状态码: ${response.status})`;
-                    }
-                    throw new Error(errorMessage);
-                }
-                
-                const data = await response.json();
-                
-                // 验证数据格式
-                if (!isValidPointsData(data)) {
-                    throw new Error('文件格式不正确或数据损坏');
-                }
-                
-                // 确认恢复操作
-                if (confirm(`确定要从云端恢复数据吗？\n文件名: ${fileName}\n\n这将覆盖当前所有数据！`)) {
-                    // 备份当前数据
-                    const backupData = { ...pointsData };
-                    
-                    try {
-                        // 恢复数据
-                        pointsData = data;
-                        
-                        // 更新界面
-                        applyTheme();
-                        updateDisplay();
-                        renderAchievements();
-                        saveData();
-                        checkAchievements();
-                        
-                        showToast(`数据恢复成功！\n文件名: ${fileName}`, 'success');
-                    } catch (restoreError) {
-                        // 恢复备份数据
-                        pointsData = backupData;
-                        showToast('数据恢复失败: ' + restoreError.message, 'error');
-                    }
-                }
-                
-            } catch (error) {
-                console.error('下载文件失败:', error);
-                
-                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-                    showToast('网络连接失败，请检查网络设置或稍后重试', 'error');
-                } else {
-                    showToast('下载失败: ' + error.message, 'error');
-                }
-            }
-        }
-        
-        // 显示坚果云配置对话框
-        function showNutcloudConfigDialog() {
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;
-                z-index: 10000;
-            `;
-            
-            modal.innerHTML = `
-                <div style="
-                    background: var(--theme-bg); padding: 30px; border-radius: var(--border-radius);
-                    max-width: 500px; width: 90%; text-align: center; box-shadow: var(--card-shadow);
-                ">
-                    <h3 style="margin-bottom: 20px; color: var(--theme-text);">☁️ 坚果云配置</h3>
-                    
-                    <div style="text-align: left; margin-bottom: 20px;">
-                        <div style="margin-bottom: 15px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">坚果云邮箱:</label>
-                            <input type="email" id="nutcloudEmail" value="${nutcloudConfig.username}" 
-                                   placeholder="请输入您的坚果云邮箱" style="
-                                width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px;
-                                font-size: 14px; box-sizing: border-box;
-                            ">
-                        </div>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">应用密码:</label>
-                            <input type="password" id="nutcloudPassword" value="${nutcloudConfig.appPassword}"
-                                   placeholder="请输入应用专用密码" style="
-                                width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px;
-                                font-size: 14px; box-sizing: border-box;
-                            ">
-                            <div style="font-size: 12px; color: #6c757d; margin-top: 5px;">
-                                💡 <a href="https://help.jianguoyun.com/s/坚果云/3907/" target="_blank" 
-                                      style="color: var(--theme-accent); text-decoration: none;">如何获取应用密码</a>
-                            </div>
-                        </div>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">备份路径:</label>
-                            <input type="text" id="nutcloudBackupPath" value="${nutcloudConfig.backupPath}"
-                                   placeholder="/积分系统备份/" style="
-                                width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px;
-                                font-size: 14px; box-sizing: border-box;
-                            ">
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;">
-                        <button onclick="testNutcloudConnection()" style="
-                            padding: 12px 20px; border: none; border-radius: 8px;
-                            background: var(--info-gradient); color: white; font-weight: 600;
-                            cursor: pointer;
-                        ">🔗 测试连接</button>
-                        <button onclick="clearNutcloudConfig()" style="
-                            padding: 12px 20px; border: 2px solid #dee2e6; border-radius: 8px;
-                            background: white; color: #6c757d; font-weight: 600; cursor: pointer;
-                        ">🗑️ 清除配置</button>
-                    </div>
-                    
-                    <div style="display: flex; gap: 10px; justify-content: center;">
-                        <button onclick="saveNutcloudConfigAndClose()" style="
-                            padding: 15px 25px; border: none; border-radius: 12px;
-                            background: var(--success-gradient); color: white; font-weight: 600;
-                            cursor: pointer;
-                        ">💾 保存</button>
-                        <button onclick="closeNutcloudConfigDialog()" style="
-                            padding: 15px 25px; border: 2px solid #dee2e6; border-radius: 12px;
-                            background: white; color: #6c757d; font-weight: 600; cursor: pointer;
-                        ">取消</button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            
-            // 绑定全局函数
-            window.saveNutcloudConfigAndClose = () => {
-                const email = document.getElementById('nutcloudEmail').value.trim();
-                const password = document.getElementById('nutcloudPassword').value.trim();
-                const backupPath = document.getElementById('nutcloudBackupPath').value.trim();
-                
-                if (!email || !password) {
-                    showToast('请填写完整的配置信息', 'error');
-                    return;
-                }
-                
-                if (!email.includes('@')) {
-                    showToast('请输入正确的邮箱地址', 'error');
-                    return;
-                }
-                
-                // 确保备份路径以/开头和结尾
-                let finalBackupPath = backupPath || '/积分系统备份/';
-                if (!finalBackupPath.startsWith('/')) finalBackupPath = '/' + finalBackupPath;
-                if (!finalBackupPath.endsWith('/')) finalBackupPath += '/';
-                
-                nutcloudConfig.username = email;
-                nutcloudConfig.appPassword = password;
-                nutcloudConfig.backupPath = finalBackupPath;
-                
-                saveNutcloudConfig();
-                closeNutcloudConfigDialog();
-                showToast('配置保存成功！', 'success');
-            };
-            
-            window.closeNutcloudConfigDialog = () => {
-                document.body.removeChild(modal);
-                delete window.saveNutcloudConfigAndClose;
-                delete window.closeNutcloudConfigDialog;
-                delete window.testNutcloudConnection;
-                delete window.clearNutcloudConfig;
-            };
-            
-            window.testNutcloudConnection = async () => {
-                const email = document.getElementById('nutcloudEmail').value.trim();
-                const password = document.getElementById('nutcloudPassword').value.trim();
-                
-                if (!email || !password) {
-                    showToast('请先填写邮箱和密码', 'error');
-                    return;
-                }
-                
-                const testConfig = {
-                    server: nutcloudConfig.server,
-                    username: email,
-                    appPassword: password,
-                    backupPath: nutcloudConfig.backupPath
-                };
-                
-                try {
-                    showToast('正在测试连接...', 'info');
-                    await testWebDAVConnection(testConfig);
-                    showToast('连接测试成功！🎉', 'success');
-                } catch (error) {
-                    showToast('连接测试失败: ' + error.message, 'error');
-                }
-            };
-            
-            window.clearNutcloudConfig = () => {
-                if (confirm('确定要清除所有配置信息吗？')) {
-                    document.getElementById('nutcloudEmail').value = '';
-                    document.getElementById('nutcloudPassword').value = '';
-                    document.getElementById('nutcloudBackupPath').value = '/积分系统备份/';
-                    showToast('配置已清除');
-                }
-            };
-        }
-        
-        // 初始化坚果云配置
-        function initNutcloudConfig() {
-            loadNutcloudConfig();
-        }
-        
-        // ================== 坚果云WebDAV功能结束 ==================
-        
-        // 增强的错误处理和用户指导
-        function showWebDAVErrorHelp(error) {
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;
-                z-index: 10000;
-            `;
-            
-            const isCorsError = error.message.includes('CORS') || error.message.includes('跨域');
-            const helpContent = isCorsError ? `
-                <h3 style="margin-bottom: 20px; color: var(--theme-text);">🔧 云端备份遇到问题</h3>
-                <div style="text-align: left; margin-bottom: 20px; line-height: 1.6;">
-                    <div style="margin-bottom: 15px; padding: 15px; background: rgba(255, 193, 7, 0.1); border-left: 4px solid #ffc107; border-radius: 8px;">
-                        <strong>检测到跨域连接问题</strong><br>
-                        这是由于浏览器的安全策略导致的，不是系统错误。
-                    </div>
-                    
-                    <h4 style="margin: 15px 0 10px 0; color: var(--theme-text);">推荐解决方案：</h4>
-                    <ol style="margin: 10px 0; padding-left: 20px;">
-                        <li style="margin-bottom: 8px;"><strong>使用本地导出功能</strong> - 点击"导出数据"按钮，将数据保存为文本文件</li>
-                        <li style="margin-bottom: 8px;"><strong>手动上传到坚果云</strong> - 将导出的文件通过坚果云网页版上传</li>
-                        <li style="margin-bottom: 8px;"><strong>尝试其他浏览器</strong> - 某些浏览器对跨域限制更宽松</li>
-                    </ol>
-                    
-                    <h4 style="margin: 15px 0 10px 0; color: var(--theme-text);">备选云存储方案：</h4>
-                    <ul style="margin: 10px 0; padding-left: 20px;">
-                        <li style="margin-bottom: 5px;">百度网盘、阿里云盘等支持WebDAV的服务</li>
-                        <li style="margin-bottom: 5px;">Dropbox、OneDrive等国际云存储</li>
-                        <li style="margin-bottom: 5px;">自建WebDAV服务器</li>
-                    </ul>
-                </div>
-            ` : `
-                <h3 style="margin-bottom: 20px; color: var(--theme-text);">⚠️ 连接失败</h3>
-                <div style="text-align: left; margin-bottom: 20px; line-height: 1.6;">
-                    <div style="margin-bottom: 15px; padding: 15px; background: rgba(220, 53, 69, 0.1); border-left: 4px solid #dc3545; border-radius: 8px;">
-                        <strong>错误详情：</strong><br>
-                        ${error.message}
-                    </div>
-                    
-                    <h4 style="margin: 15px 0 10px 0; color: var(--theme-text);">请检查：</h4>
-                    <ol style="margin: 10px 0; padding-left: 20px;">
-                        <li style="margin-bottom: 8px;">网络连接是否正常</li>
-                        <li style="margin-bottom: 8px;">坚果云账号和应用密码是否正确</li>
-                        <li style="margin-bottom: 8px;">坚果云服务是否正常</li>
-                    </ol>
-                </div>
-            `;
-            
-            modal.innerHTML = `
-                <div style="
-                    background: var(--theme-bg); padding: 30px; border-radius: var(--border-radius);
-                    max-width: 600px; width: 90%; text-align: center; box-shadow: var(--card-shadow);
-                ">
-                    ${helpContent}
-                    
-                    <div style="display: flex; gap: 15px; justify-content: center; margin-top: 25px;">
-                        <button onclick="showLocalBackupGuide(); closeWebDAVErrorModal();" style="
-                            padding: 15px 25px; border: none; border-radius: 12px;
-                            background: var(--success-gradient); color: white; font-weight: 600;
-                            cursor: pointer;
-                        ">📁 查看本地备份指南</button>
-                        <button onclick="closeWebDAVErrorModal()" style="
-                            padding: 15px 25px; border: 2px solid #dee2e6; border-radius: 12px;
-                            background: white; color: #6c757d; font-weight: 600; cursor: pointer;
-                        ">关闭</button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            
-            // 绑定全局函数
-            window.closeWebDAVErrorModal = () => {
-                document.body.removeChild(modal);
-                delete window.closeWebDAVErrorModal;
-            };
-            
-            window.showLocalBackupGuide = () => {
-                // 显示本地备份指南
-                showToast('请在管理员面板中点击"导出数据"按钮', 'info');
-            };
-        }
-        
-        // 全局错误处理函数
-        window.handleWebDAVError = function(error) {
-            console.error('WebDAV操作失败:', error);
-            
-            // 如果是网络或CORS错误，显示详细帮助
-            if (error.name === 'TypeError' || 
-                error.message.includes('Failed to fetch') || 
-                error.message.includes('CORS') ||
-                error.message.includes('跨域')) {
-                showWebDAVErrorHelp(error);
-            } else {
-                // 其他错误直接显示
-                showToast('操作失败: ' + error.message, 'error');
-            }
-        };
+
         
 
     </script>
