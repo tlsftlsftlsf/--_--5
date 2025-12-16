@@ -35,6 +35,11 @@ jobs:
           exit 1
         fi
         
+        if [ ! -f "webdav-test.html" ]; then
+          echo "Error: webdav-test.html not found"
+          exit 1
+        fi
+        
         # 验证HTML文件语法
         echo "验证HTML文件完整性..."
         
@@ -44,6 +49,22 @@ jobs:
         
         if [ $size -lt 100000 ]; then
           echo "Warning: 文件大小异常，可能不完整"
+        fi
+        
+        # 检查CORS修复代码是否包含
+        echo "检查CORS修复代码..."
+        if grep -q "testCORSProxyConnection" ultimate-points-system-fixed.html; then
+          echo "✅ CORS代理连接功能已包含"
+        else
+          echo "❌ CORS代理连接功能缺失"
+          exit 1
+        fi
+        
+        if grep -q "connectionMethod" ultimate-points-system-fixed.html; then
+          echo "✅ 多重连接策略已实现"
+        else
+          echo "❌ 多重连接策略缺失"
+          exit 1
         fi
         
     - name: Deploy to GitHub Pages

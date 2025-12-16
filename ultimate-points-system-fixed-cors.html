@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>积分系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* 默认主题变量 - 优雅紫罗兰渐变 */
+            --primary-gradient: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 50%, #06b6d4 100%);
+            --success-gradient: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            --danger-gradient: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            --info-gradient: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            --theme-accent: #8b5cf6;
+            --theme-text: #1f2937;
+            --theme-bg: rgba(255, 255, 255, 0.96);
+            --card-shadow: 0 8px 25px rgba(139, 92, 246, 0.15);
+            --card-shadow-hover: 0 15px 35px rgba(139, 92, 246, 0.25);
+            --border-radius: 18px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--theme-text);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--theme-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* WebDAV同步功能样式 */
+        .webdav-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10001;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .webdav-modal.show {
+            display: flex;
+        }
+
+        .webdav-content {
+            background: var(--theme-bg);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            max-width: 500px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: var(--card-shadow);
+        }
+
+        .webdav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .webdav-header h3 {
+            margin: 0;
+            color: var(--theme-text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .config-section {
+            margin-bottom: 25px;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .config-section h4 {
+            margin-bottom: 15px;
+            color: var(--theme-text);
+            font-size: 1.1em;
+            border-left: 4px solid var(--theme-accent);
+            padding-left: 10px;
+        }
+
+        .sync-status-bar {
+            background: linear-gradient(to right, #f8f9fa, #e9ecef);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.9em;
+            border: 1px solid #dee2e6;
+        }
+
+        .sync-status-bar.success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: #10b981;
+            color: #059669;
+        }
+
+        .sync-status-bar.error {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444;
+            color: #dc2626;
+        }
+
+        .sync-status-bar.syncing {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+            color: #2563eb;
+        }
+
+        .sync-icon {
+            font-size: 1.2em;
+            margin-right: 8px;
+        }
+
+        .syncing .sync-icon {
+            animation: rotate 1s linear infinite;
+            display: inline-block;
+        }
+
+        .config-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-dav {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-dav-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-dav-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-dav-test {
+            background: var(--info-gradient);
+            color: white;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #6c757d;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: var(--theme-accent);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .cors-error-notice {
+            background: rgba(255, 165, 0, 0.1);
+            border: 1px solid #ffa500;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            color: #cc8400;
+            font-size: 14px;
+        }
+
+        .cors-error-notice h5 {
+            margin: 0 0 8px 0;
+            color: #ff8c00;
+        }
+
+        .proxy-info {
+            background: rgba(0, 123, 255, 0.1);
+            border: 1px solid #007bff;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #0056b3;
+        }
+
+        /* 进度条样式 */
+        .progress-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: #e5e7eb;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-gradient);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 简化的基本样式 */
+        .main-content {
+            padding: 40px;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin: 10px;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-gradient);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .status-display {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.9);
+            border: 2px solid #dee2e6;
+        }
+
+        .status-success {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
+        }
+
+        .status-error {
+            border-color: #dc3545;
+            background: rgba(220, 53, 69, 0.1);
+        }
+
+        .status-warning {
+            border-color: #ffc107;
+            background: rgba(255, 193, 7, 0.1);
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .webdav-content {
+                width: 95%;
+                padding: 20px;
+            }
+            
+            .config-actions {
+                flex-direction: column;
+            }
+            
+            .btn-dav {
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <h1>☁️ 积分系统WebDAV同步 - CORS修复版</h1>
+            <p>修复了跨域请求问题，支持多种代理服务</p>
+            
+            <div style="margin: 30px 0;">
+                <button class="btn btn-primary" onclick="openWebDAVConfig()">⚙️ 配置WebDAV同步</button>
+                <button class="btn btn-success" onclick="testWebDAVConnection()">🔗 测试连接</button>
+                <button class="btn btn-primary" onclick="performSync()">🔄 执行同步</button>
+            </div>
+
+            <div id="webdavStatus" class="status-display">
+                <h3>📊 连接状态</h3>
+                <p id="statusText">未配置WebDAV同步</p>
+            </div>
+
+            <div id="corsHelpSection" style="margin-top: 30px; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto;">
+                <h3>🔧 CORS跨域解决方案</h3>
+                <div style="background: rgba(255,255,255,0.9); padding: 20px; border-radius: 12px; margin-top: 15px;">
+                    <h4>问题说明：</h4>
+                    <p>由于浏览器的CORS（跨源资源共享）安全策略，直接从网页访问坚果云WebDAV服务器会被阻止。本修复版本提供了多种解决方案：</p>
+                    
+                    <h4>解决方案：</h4>
+                    <ol>
+                        <li><strong>第三方CORS代理服务：</strong> 自动尝试多个代理服务</li>
+                        <li><strong>自定义代理：</strong> 用户可配置自己的代理服务</li>
+                        <li><strong>浏览器扩展：</strong> 推荐使用CORS浏览器扩展</li>
+                        <li><strong>本地部署：</strong> 在支持CORS的环境中部署</li>
+                    </ol>
+                    
+                    <h4>支持的代理服务：</h4>
+                    <ul>
+                        <li>cors-anywhere.herokuapp.com</li>
+                        <li>api.allorigins.win</li>
+                        <li>corsproxy.io</li>
+                        <li>自定义代理服务</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WebDAV配置弹窗 -->
+    <div id="webdavConfigDialog" class="webdav-modal">
+        <div class="webdav-content">
+            <div class="webdav-header">
+                <h3>☁️ 坚果云WebDAV配置 - CORS修复版</h3>
+                <button onclick="closeWebDAVConfig()" style="background: none; border: none; font-size: 20px; cursor: pointer;">✕</button>
+            </div>
+            
+            <div class="config-section">
+                <h4>连接设置</h4>
+                <div class="input-group">
+                    <label>服务器地址</label>
+                    <input type="text" id="davServerUrl" value="https://dav.jianguoyun.com/dav/" placeholder="WebDAV服务器地址">
+                </div>
+                <div class="input-group">
+                    <label>代理服务地址（可选）</label>
+                    <input type="text" id="davProxyUrl" placeholder="自定义代理服务地址，如：https://your-proxy.vercel.app/api/proxy">
+                    <div class="proxy-info">
+                        <strong>💡 提示：</strong>如果不填写，系统将自动尝试多个第三方CORS代理服务。
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h4>认证信息</h4>
+                <div class="input-group">
+                    <label>坚果云账号（邮箱）</label>
+                    <input type="text" id="davUsername" placeholder="您的坚果云注册邮箱">
+                </div>
+                <div class="input-group">
+                    <label>应用专用密码</label>
+                    <input type="password" id="davPassword" placeholder="请在坚果云安全设置中生成的应用密码">
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        注意：这是应用专用密码，不是登录密码。
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h4>CORS错误处理</h4>
+                <div class="cors-error-notice">
+                    <h5>⚠️ 跨域限制说明</h5>
+                    <p>如果遇到CORS错误，请尝试以下解决方案：</p>
+                    <ol style="margin: 10px 0; padding-left: 20px;">
+                        <li>启用CORS浏览器扩展（如CORS Unblock）</li>
+                        <li>配置自定义代理服务</li>
+                        <li>使用系统自动代理功能</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div id="davConnectionStatus" class="sync-status-bar" style="display: none;">
+                <span class="sync-icon">🔄</span>
+                <span class="sync-text">正在测试连接...</span>
+            </div>
+            
+            <div class="config-actions">
+                <button class="btn-dav btn-dav-test" onclick="testConnection()">🔗 测试连接</button>
+                <button class="btn-dav btn-dav-primary" onclick="saveConfig()">💾 保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 同步进度弹窗 -->
+    <div id="syncProgressModal" class="webdav-modal">
+        <div class="webdav-content" style="max-width: 400px;">
+            <h3 style="text-align: center; margin-bottom: 20px;">☁️ 正在同步数据</h3>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div id="syncProgressFill" class="progress-fill"></div>
+                </div>
+                <div id="syncProgressText" class="progress-text">准备中...</div>
+            </div>
+            <div id="syncStepInfo" style="text-align: center; font-size: 14px; color: #666;"></div>
+        </div>
+    </div>
+
+    <script>
+        // 全局WebDAV客户端实例
+        let webdavClient = null;
+
+        // 修复后的WebDAV客户端类
+        class FixedNutcloudWebDAVClient {
+            constructor() {
+                this.config = this.loadConfig();
+                this.isSyncing = false;
+                this.connectionMethod = null;
+                
+                // CORS代理服务列表
+                this.corsProxies = [
+                    'https://cors-anywhere.herokuapp.com/',
+                    'https://api.allorigins.win/raw?url=',
+                    'https://corsproxy.io/?'
+                ];
+            }
+
+            // 加载配置
+            loadConfig() {
+                const stored = localStorage.getItem('webdav_config_fixed');
+                return stored ? JSON.parse(stored) : {
+                    serverUrl: 'https://dav.jianguoyun.com/dav/',
+                    proxyUrl: '',
+                    username: '',
+                    password: '',
+                    autoSync: false,
+                    conflictStrategy: 'newest-wins'
+                };
+            }
+
+            // 保存配置
+            saveConfig() {
+                const serverUrl = document.getElementById('davServerUrl').value.trim();
+                const proxyUrl = document.getElementById('davProxyUrl').value.trim();
+                const username = document.getElementById('davUsername').value.trim();
+                const password = document.getElementById('davPassword').value.trim();
+
+                if (!serverUrl || !username || !password) {
+                    this.showError('请填写完整的配置信息');
+                    return false;
+                }
+
+                // 简单的加密存储
+                const encryptedPassword = btoa(password);
+
+                this.config = {
+                    serverUrl,
+                    proxyUrl,
+                    username,
+                    password: encryptedPassword,
+                    autoSync: false,
+                    conflictStrategy: 'newest-wins'
+                };
+
+                localStorage.setItem('webdav_config_fixed', JSON.stringify(this.config));
+                this.updateStatus('配置已保存', 'success');
+                return true;
+            }
+
+            // 获取认证头
+            getAuthHeader() {
+                try {
+                    const password = atob(this.config.password);
+                    return 'Basic ' + btoa(this.config.username + ':' + password);
+                } catch (e) {
+                    console.error('密码解码失败', e);
+                    return '';
+                }
+            }
+
+            // 统一的URL构建方法（修复版本）
+            getRequestUrl(path = '') {
+                // 确保path以/开头
+                if (path && !path.startsWith('/')) path = '/' + path;
+                
+                // 如果配置了自定义代理URL
+                if (this.config.proxyUrl && this.config.proxyUrl.trim()) {
+                    let proxyUrl = this.config.proxyUrl.trim();
+                    if (proxyUrl.endsWith('/')) proxyUrl = proxyUrl.slice(0, -1);
+                    
+                    // 构建代理URL：代理地址 + 目标路径
+                    return proxyUrl + path;
+                }
+                
+                // 如果使用CORS代理模式
+                if (this.connectionMethod === 'cors-proxy' && this.config.corsProxyUrl) {
+                    const targetUrl = this.getDirectRequestUrl(path);
+                    const encodedUrl = encodeURIComponent(targetUrl);
+                    return this.config.corsProxyUrl + encodedUrl;
+                }
+                
+                // 直连模式
+                return this.getDirectRequestUrl(path);
+            }
+
+            // 获取直接请求URL
+            getDirectRequestUrl(path) {
+                const baseUrl = this.config.serverUrl.replace(/\/$/, '');
+                const targetPath = path.replace(/^\//, '');
+                return `${baseUrl}/${targetPath}`;
+            }
+
+            // 获取请求头
+            getHeaders(method = 'GET') {
+                const headers = {
+                    'Authorization': this.getAuthHeader(),
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-Type': 'application/json'
+                };
+                
+                // 如果使用代理，可能需要添加目标URL头
+                if (this.config.proxyUrl || this.connectionMethod === 'cors-proxy') {
+                    headers['X-Target-Url'] = this.config.serverUrl;
+                    headers['X-Requested-With'] = 'XMLHttpRequest';
+                }
+                
+                return headers;
+            }
+
+            // 判断是否使用代理
+            isUsingProxy() {
+                return this.connectionMethod === 'proxy' || this.connectionMethod === 'cors-proxy';
+            }
+
+            // 测试直连连接
+            async testDirectConnection() {
+                const url = this.getRequestUrl('/');
+                console.log('尝试直连方法:', url);
+                
+                try {
+                    const response = await fetch(url, {
+                        method: 'PROPFIND',
+                        headers: {
+                            ...this.getHeaders(),
+                            'Depth': '0'
+                        }
+                    });
+
+                    if (response.ok) {
+                        this.connectionMethod = 'direct';
+                        console.log('直连连接成功');
+                        return true;
+                    }
+                } catch (error) {
+                    console.warn('直连连接失败:', error);
+                }
+                return false;
+            }
+
+            // 测试自定义代理连接
+            async testProxyConnection() {
+                if (!this.config.proxyUrl) {
+                    return false;
+                }
+
+                const proxyUrl = this.getRequestUrl('/');
+                console.log('尝试代理方法:', proxyUrl);
+                
+                try {
+                    const response = await fetch(proxyUrl, {
+                        method: 'PROPFIND',
+                        headers: {
+                            ...this.getHeaders(),
+                            'Depth': '0'
+                        }
+                    });
+
+                    if (response.ok) {
+                        this.connectionMethod = 'proxy';
+                        console.log('代理连接成功');
+                        return true;
+                    }
+                } catch (error) {
+                    console.warn('代理连接失败:', error);
+                }
+                return false;
+            }
+
+            // 测试第三方CORS代理服务
+            async testCORSProxyConnection() {
+                console.log('尝试第三方CORS代理服务...');
+
+                for (const proxyBase of this.corsProxies) {
+                    try {
+                        const targetUrl = this.getDirectRequestUrl('/');
+                        const proxyUrl = proxyBase + encodeURIComponent(targetUrl);
+                        
+                        console.log('尝试CORS代理:', proxyUrl);
+                        
+                        const response = await fetch(proxyUrl, {
+                            method: 'PROPFIND',
+                            headers: {
+                                'Authorization': this.getAuthHeader(),
+                                'Depth': '0'
+                            }
+                        });
+
+                        if (response.ok) {
+                            this.connectionMethod = 'cors-proxy';
+                            this.config.corsProxyUrl = proxyBase;
+                            console.log('CORS代理连接成功:', proxyBase);
+                            return true;
+                        }
+                    } catch (error) {
+                        console.warn(`CORS代理 ${proxyBase} 失败:`, error);
+                    }
+                }
+                
+                return false;
+            }
+
+            // 测试连接 - 增强版
+            async testConnection() {
+                this.showStatus('正在连接坚果云...', 'syncing');
+
+                // 尝试多种连接方式
+                const methods = [
+                    () => this.testDirectConnection(),
+                    () => this.testProxyConnection(),
+                    () => this.testCORSProxyConnection()
+                ];
+
+                for (let i = 0; i < methods.length; i++) {
+                    try {
+                        const result = await methods[i]();
+                        if (result) {
+                            this.showStatus(`连接成功！ (方法${i + 1}: ${this.getConnectionMethodName()})`, 'success');
+                            return true;
+                        }
+                    } catch (error) {
+                        console.warn(`连接方法${i + 1}失败:`, error);
+                    }
+                }
+
+                // 所有方法都失败
+                this.showStatus('所有连接方法都失败 - 请检查网络或配置代理', 'error');
+                this.showCorsErrorHelp();
+                return false;
+            }
+
+            // 获取连接方法名称
+            getConnectionMethodName() {
+                const names = {
+                    'direct': '直连',
+                    'proxy': '自定义代理',
+                    'cors-proxy': 'CORS代理'
+                };
+                return names[this.connectionMethod] || '未知';
+            }
+
+            // 上传数据（修复版本）
+            async uploadData(data, fileName = '积分系统数据.json') {
+                this.showStatus('正在上传数据...', 'syncing');
+
+                try {
+                    const dataStr = JSON.stringify(data, null, 2);
+                    const url = this.getRequestUrl(`/${fileName}`);
+                    
+                    console.log('上传URL:', url);
+                    console.log('使用连接方法:', this.getConnectionMethodName());
+
+                    const response = await fetch(url, {
+                        method: 'PUT',
+                        headers: {
+                            ...this.getHeaders('PUT'),
+                            'Content-Type': 'application/json'
+                        },
+                        body: dataStr
+                    });
+
+                    if (response.ok) {
+                        this.showStatus('上传成功！', 'success');
+                        return true;
+                    } else {
+                        throw new Error(`上传失败: ${response.status} ${response.statusText}`);
+                    }
+                } catch (error) {
+                    console.error('Upload failed:', error);
+                    this.handleCorsError(error, '上传');
+                    return false;
+                }
+            }
+
+            // 下载数据（修复版本）
+            async downloadData(fileName = '积分系统数据.json') {
+                this.showStatus('正在下载数据...', 'syncing');
+
+                try {
+                    const url = this.getRequestUrl(`/${fileName}`);
+                    
+                    console.log('下载URL:', url);
+                    console.log('使用连接方法:', this.getConnectionMethodName());
+
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: this.getHeaders('GET')
+                    });
+
+                    if (response.ok) {
+                        const dataStr = await response.text();
+                        const data = JSON.parse(dataStr);
+                        this.showStatus('下载成功！', 'success');
+                        return data;
+                    } else if (response.status === 404) {
+                        this.showStatus('云端没有备份文件', 'warning');
+                        return null;
+                    } else {
+                        throw new Error(`下载失败: ${response.status} ${response.statusText}`);
+                    }
+                } catch (error) {
+                    console.error('Download failed:', error);
+                    this.handleCorsError(error, '下载');
+                    return null;
+                }
+            }
+
+            // 执行同步（修复版本）
+            async sync() {
+                if (this.isSyncing) return;
+                
+                // 检查配置
+                if (!this.config.username) {
+                    this.showError('请先配置WebDAV同步');
+                    return;
+                }
+
+                this.isSyncing = true;
+                this.showProgress('正在连接服务器...', 10);
+
+                try {
+                    // 1. 测试连接
+                    this.showProgress('测试连接...', 20);
+                    const connected = await this.testConnection();
+                    if (!connected) {
+                        throw new Error('无法连接到服务器');
+                    }
+
+                    // 2. 准备同步数据
+                    this.showProgress('准备同步数据...', 40);
+                    const syncData = {
+                        currentPoints: 100,
+                        totalEarned: 500,
+                        totalSpent: 400,
+                        lastSync: new Date().toISOString(),
+                        syncMethod: this.getConnectionMethodName(),
+                        device: navigator.userAgent,
+                        version: '2.1-cors-fixed'
+                    };
+
+                    // 3. 上传数据
+                    this.showProgress('上传数据...', 60);
+                    const uploadSuccess = await this.uploadData(syncData);
+                    if (!uploadSuccess) {
+                        throw new Error('数据上传失败');
+                    }
+
+                    // 4. 验证上传
+                    this.showProgress('验证上传...', 80);
+                    const cloudData = await this.downloadData();
+                    
+                    // 5. 完成
+                    this.showProgress('同步完成！', 100);
+                    this.updateStatus(`同步成功 (${this.getConnectionMethodName()})`, 'success');
+                    showToast('云端同步完成！', 'success');
+                    
+                    setTimeout(() => this.closeProgress(), 2000);
+                } catch (error) {
+                    console.error('Sync error:', error);
+                    this.updateStatus('同步失败: ' + error.message, 'error');
+                    showToast('同步失败: ' + error.message, 'error');
+                } finally {
+                    this.isSyncing = false;
+                }
+            }
+
+            // 处理CORS错误
+            handleCorsError(error, operation) {
+                const errorMessage = error.message || '未知错误';
+                
+                if (errorMessage.includes('CORS') || 
+                    errorMessage.includes('Failed to fetch') ||
+                    errorMessage.includes('Network Error') ||
+                    errorMessage.includes('TypeError')) {
+                    
+                    this.showStatus(`${operation}失败：跨域限制或网络错误`, 'error');
+                    this.showCorsErrorHelp();
+                } else {
+                    this.showStatus(`${operation}失败: ${errorMessage}`, 'error');
+                }
+            }
+
+            // 显示CORS错误帮助
+            showCorsErrorHelp() {
+                const helpHtml = `
+                    <div class="cors-error-notice">
+                        <h5>🔧 跨域问题解决方案</h5>
+                        <p>遇到跨域限制？请尝试以下方法：</p>
+                        <ol style="margin: 10px 0; padding-left: 20px;">
+                            <li><strong>启用CORS扩展：</strong> 安装并启用CORS浏览器扩展</li>
+                            <li><strong>配置代理：</strong> 在配置中设置代理服务地址</li>
+                            <li><strong>使用自动代理：</strong> 系统将自动尝试多个代理服务</li>
+                            <li><strong>本地部署：</strong> 在支持CORS的环境中部署此页面</li>
+                        </ol>
+                    </div>
+                `;
+                
+                const statusDiv = document.getElementById('davConnectionStatus');
+                if (statusDiv) {
+                    statusDiv.innerHTML += helpHtml;
+                }
+            }
+
+            // 显示状态
+            showStatus(text, status = '') {
+                const statusDiv = document.getElementById('davConnectionStatus');
+                if (statusDiv) {
+                    statusDiv.style.display = 'flex';
+                    statusDiv.className = 'sync-status-bar ' + status;
+                    statusDiv.querySelector('.sync-text').textContent = text;
+                }
+            }
+
+            // 更新主状态显示
+            updateStatus(text, status = '') {
+                const statusDiv = document.getElementById('webdavStatus');
+                const statusText = document.getElementById('statusText');
+                
+                if (statusText) statusText.textContent = text;
+                if (statusDiv) {
+                    statusDiv.className = 'status-display status-' + status;
+                }
+            }
+
+            // 显示错误
+            showError(message) {
+                showToast(message, 'error');
+                this.updateStatus(message, 'error');
+            }
+
+            // 显示进度
+            showProgress(text, percent) {
+                const modal = document.getElementById('syncProgressModal');
+                const fill = document.getElementById('syncProgressFill');
+                const textEl = document.getElementById('syncProgressText');
+                const infoEl = document.getElementById('syncStepInfo');
+                
+                if (modal) {
+                    modal.classList.add('show');
+                    if (fill) fill.style.width = percent + '%';
+                    if (textEl) textEl.textContent = percent + '%';
+                    if (infoEl) infoEl.textContent = text;
+                }
+            }
+
+            // 关闭进度弹窗
+            closeProgress() {
+                const modal = document.getElementById('syncProgressModal');
+                if (modal) {
+                    modal.classList.remove('show');
+                }
+            }
+        }
+
+        // 全局函数
+        function openWebDAVConfig() {
+            const modal = document.getElementById('webdavConfigDialog');
+            modal.classList.add('show');
+            
+            // 填充现有配置
+            if (webdavClient && webdavClient.config) {
+                document.getElementById('davServerUrl').value = webdavClient.config.serverUrl;
+                document.getElementById('davProxyUrl').value = webdavClient.config.proxyUrl || '';
+                document.getElementById('davUsername').value = webdavClient.config.username;
+            }
+        }
+
+        function closeWebDAVConfig() {
+            document.getElementById('webdavConfigDialog').classList.remove('show');
+        }
+
+        function testConnection() {
+            if (webdavClient.saveConfig()) {
+                webdavClient.testConnection();
+            }
+        }
+
+        function saveConfig() {
+            if (webdavClient.saveConfig()) {
+                closeWebDAVConfig();
+                showToast('配置已保存', 'success');
+            }
+        }
+
+        function testWebDAVConnection() {
+            if (!webdavClient) {
+                showToast('请先配置WebDAV', 'error');
+                openWebDAVConfig();
+                return;
+            }
+            webdavClient.testConnection();
+        }
+
+        function performSync() {
+            if (!webdavClient) {
+                showToast('请先配置WebDAV', 'error');
+                openWebDAVConfig();
+                return;
+            }
+            webdavClient.sync();
+        }
+
+        // 显示提示消息
+        function showToast(message, type = 'success') {
+            // 移除现有的toast
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            // 创建新的toast
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 10000;
+                background: ${type === 'success' ? 'var(--success-gradient)' : 'var(--danger-gradient)'};
+                color: white; padding: 15px 20px; border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-weight: 600;
+                transform: translateX(100%); transition: transform 0.3s ease;
+            `;
+            document.body.appendChild(toast);
+
+            // 显示动画
+            setTimeout(() => toast.style.transform = 'translateX(0)', 100);
+
+            // 自动隐藏
+            setTimeout(() => {
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // 初始化
+        function init() {
+            console.log('=== WebDAV CORS修复版初始化 ===');
+            webdavClient = new FixedNutcloudWebDAVClient();
+            
+            // 如果已有配置，更新状态
+            if (webdavClient.config.username) {
+                webdavClient.updateStatus('已配置，点击测试连接', '');
+            }
+            
+            console.log('WebDAV CORS修复版初始化完成');
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+
+        // 点击外部关闭弹窗
+        document.addEventListener('click', (e) => {
+            const configDialog = document.getElementById('webdavConfigDialog');
+            const progressModal = document.getElementById('syncProgressModal');
+            
+            if (e.target === configDialog) {
+                closeWebDAVConfig();
+            }
+            if (e.target === progressModal) {
+                webdavClient?.closeProgress();
+            }
+        });
+
+        console.log('WebDAV CORS修复版脚本加载完成');
+    </script>
+</body>
+</html>

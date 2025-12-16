@@ -3109,10 +3109,225 @@
                 return serverUrl + path;
             }
 
-            // 获取请求头
+            // 获取请求URL（根据连接方式返回不同的URL）
+            getRequestUrl(path) {
+                if (this.connectionMethod === 'cors-proxy' && this.config.corsProxyUrl) {
+                    // CORS代理模式
+                    const targetUrl = encodeURIComponent(this.getDirectRequestUrl(path));
+                    return this.config.corsProxyUrl + targetUrl;
+                } else if (this.connectionMethod === 'proxy') {
+                    // 代理模式
+                    return this.getProxyRequestUrl(path);
+                } else {
+                    // 直连模式
+                    return this.getDirectRequestUrl(path);
+                }
+            }
+
+            // 获取直接请求URL
+            getDirectRequestUrl(path) {
+                const baseUrl = this.config.serverUrl.replace(/\/$/, '');
+                const targetPath = path.replace(/^\//, '');
+                return `${baseUrl}/${targetPath}`;
+            }
+
+            // 同步数据（增强版，支持冲突解决）
+            async syncData() {
+                const statusEl = document.getElementById('davConnectionStatus');
+                
+                try {
+                    statusEl.style.display = 'flex';
+                    statusEl.className = 'sync-status-bar syncing';
+                    statusEl.querySelector('.sync-text').textContent = '正在同步数据...';
+
+                    // 获取当前数据
+                    const currentData = this.exportData();
+                    const currentTimestamp = new Date().toISOString();
+                    
+                    // 尝试下载云端数据
+                    const cloudData = await this.downloadData();
+                    let finalData = currentData;
+                    let action = 'local-wins';
+                    
+                    if (cloudData) {
+                        // 比较时间戳，解决冲突
+                        const localTime = new Date(currentTimestamp);
+                        const cloudTime = new Date(cloudData.lastSync || 0);
+                        
+                        if (cloudTime > localTime) {
+                            // 云端数据更新，使用云端数据
+                            finalData = cloudData;
+                            action = 'remote-wins';
+                            this.importData(cloudData);
+                        } else if (cloudTime.getTime() === localTime.getTime()) {
+                            // 数据相同，无需操作
+                            action = 'no-change';
+                        } else {
+                            // 本地数据更新，使用本地数据
+                            action = 'local-wins';
+                        }
+                    }
+                    
+                    // 更新同步信息
+                    finalData.lastSync = currentTimestamp;
+                    finalData.syncMethod = this.connectionMethod;
+                    
+                    // 上传最新数据
+                    const uploadSuccess = await this.uploadData(finalData);
+                    
+                    if (uploadSuccess) {
+                        statusEl.className = 'sync-status-bar success';
+                        statusEl.querySelector('.sync-text').textContent = `同步成功 (${action})!`;
+                        this.updateSyncStatus(`同步成功 (${action})`, 'success');
+                        
+                        // 保存配置
+                        this.saveConfig();
+                        
+                        showToast('数据同步成功！', 'success');
+                        return true;
+                    } else {
+                        throw new Error('上传数据失败');
+                    }
+                    
+                } catch (error) {
+                    console.error('Sync failed:', error);
+                    statusEl.className = 'sync-status-bar error';
+                    statusEl.querySelector('.sync-text').textContent = '同步失败: ' + error.message;
+                    this.updateSyncStatus('同步失败', 'error');
+                    
+                    // 提供本地导出作为备选方案
+                    if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+                        showToast('跨域限制导致同步失败，请使用本地导出功能', 'warning');
+                        this.showLocalExportOption();
+                    }
+                    
+                    return false;
+                }
+            }
+
+            // 显示本地导出选项
+            showLocalExportOption() {
+                const exportBtn = document.createElement('button');
+                exportBtn.textContent = '使用本地导出';
+                exportBtn.onclick = () => this.exportDataToFile();
+                exportBtn.style.cssText = 'margin-left: 10px; padding: 5px 10px; background: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer;';
+                
+                const statusEl = document.getElementById('davConnectionStatus');
+                statusEl.appendChild(exportBtn);
+            }
+
+            // 本地数据导出
+            exportDataToFile() {
+                try {
+                    const data = this.exportData();
+                    const dataStr = JSON.stringify(data, null, 2);
+                    const blob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `积分系统数据_${new Date().toISOString().slice(0, 10)}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    showToast('数据已导出到本地文件', 'success');
+                } catch (error) {
+                    console.error('Export failed:', error);
+                    showToast('导出失败: ' + error.message, 'error');
+                }
+            }
+            async uploadData(data, fileName = '积分系统数据.json') {
+                const statusEl = document.getElementById('davConnectionStatus');
+                
+                try {
+                    statusEl.style.display = 'flex';
+                    statusEl.className = 'sync-status-bar syncing';
+                    statusEl.querySelector('.sync-text').textContent = '正在上传数据...';
+
+                    const dataStr = JSON.stringify(data, null, 2);
+                    const url = this.getRequestUrl(`/${fileName}`);
+                    
+                    const response = await fetch(url, {
+                        method: 'PUT',
+                        headers: {
+                            ...this.getHeaders('PUT'),
+                            'Content-Type': 'application/json'
+                        },
+                        body: dataStr
+                    });
+
+                    if (response.ok) {
+                        statusEl.className = 'sync-status-bar success';
+                        statusEl.querySelector('.sync-text').textContent = '上传成功！';
+                        this.updateSyncStatus('上传成功', 'success');
+                        return true;
+                    } else {
+                        throw new Error(`上传失败: ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error('Upload failed:', error);
+                    statusEl.className = 'sync-status-bar error';
+                    statusEl.querySelector('.sync-text').textContent = '上传失败: ' + error.message;
+                    this.updateSyncStatus('上传失败', 'error');
+                    
+                    // 如果是CORS错误，建议使用本地导出
+                    if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+                        showToast('跨域限制导致上传失败，请使用本地导出功能', 'warning');
+                    }
+                    
+                    return false;
+                }
+            }
+
+            // 从服务器下载数据
+            async downloadData(fileName = '积分系统数据.json') {
+                const statusEl = document.getElementById('davConnectionStatus');
+                
+                try {
+                    statusEl.style.display = 'flex';
+                    statusEl.className = 'sync-status-bar syncing';
+                    statusEl.querySelector('.sync-text').textContent = '正在下载数据...';
+
+                    const url = this.getRequestUrl(`/${fileName}`);
+                    
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: this.getHeaders('GET')
+                    });
+
+                    if (response.ok) {
+                        const dataStr = await response.text();
+                        const data = JSON.parse(dataStr);
+                        
+                        statusEl.className = 'sync-status-bar success';
+                        statusEl.querySelector('.sync-text').textContent = '下载成功！';
+                        this.updateSyncStatus('下载成功', 'success');
+                        
+                        return data;
+                    } else {
+                        throw new Error(`下载失败: ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error('Download failed:', error);
+                    statusEl.className = 'sync-status-bar error';
+                    statusEl.querySelector('.sync-text').textContent = '下载失败: ' + error.message;
+                    this.updateSyncStatus('下载失败', 'error');
+                    
+                    // 如果是CORS错误，建议使用本地导出
+                    if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+                        showToast('跨域限制导致下载失败，请使用本地导入功能', 'warning');
+                    }
+                    
+                    return null;
+                }
+            }
             getHeaders(method = 'GET') {
                 const headers = {
-                    'Authorization': this.getAuthHeader()
+                    'Authorization': this.getAuthHeader(),
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-Type': 'application/json'
                 };
                 
                 // 如果使用代理，可能需要添加目标URL头
@@ -3120,12 +3335,122 @@
                     let serverUrl = this.config.serverUrl;
                     if (serverUrl.endsWith('/')) serverUrl = serverUrl.slice(0, -1);
                     headers['X-Target-Url'] = serverUrl;
+                    headers['X-Requested-With'] = 'XMLHttpRequest';
+                }
+                
+                // 添加CORS相关头部（适用于代理模式）
+                if (this.isUsingProxy()) {
+                    headers['Access-Control-Allow-Origin'] = '*';
+                    headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS, PROPFIND, MKCOL';
+                    headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Target-Url, X-Requested-With';
                 }
                 
                 return headers;
             }
 
-            // 测试连接
+            // 方法1：直连连接（适用于CORS插件或本地部署）
+            async testDirectConnection() {
+                const url = this.getRequestUrl('/');
+                console.log('尝试直连方法:', url);
+                
+                const response = await fetch(url, {
+                    method: 'PROPFIND',
+                    headers: {
+                        ...this.getHeaders(),
+                        'Depth': '0'
+                    }
+                });
+
+                if (response.ok) {
+                    this.connectionMethod = 'direct';
+                    console.log('直连连接成功');
+                    return true;
+                }
+                throw new Error(`直连响应错误: ${response.status}`);
+            }
+
+            // 方法2：代理连接（自定义代理服务）
+            async testProxyConnection() {
+                if (!this.config.proxyUrl) {
+                    throw new Error('未配置代理URL');
+                }
+
+                const proxyUrl = this.getProxyRequestUrl('/');
+                console.log('尝试代理方法:', proxyUrl);
+                
+                const response = await fetch(proxyUrl, {
+                    method: 'PROPFIND',
+                    headers: {
+                        ...this.getHeaders(),
+                        'Depth': '0'
+                    }
+                });
+
+                if (response.ok) {
+                    this.connectionMethod = 'proxy';
+                    console.log('代理连接成功');
+                    return true;
+                }
+                throw new Error(`代理响应错误: ${response.status}`);
+            }
+
+            // 方法3：第三方CORS代理服务
+            async testCORSProxyConnection() {
+                // 使用公开的CORS代理服务
+                const corsProxies = [
+                    'https://cors-anywhere.herokuapp.com/',
+                    'https://api.allorigins.win/raw?url=',
+                    'https://corsproxy.io/?'
+                ];
+
+                for (const proxyBase of corsProxies) {
+                    try {
+                        const targetUrl = encodeURIComponent(this.getRequestUrl('/'));
+                        const proxyUrl = proxyBase + targetUrl;
+                        
+                        console.log('尝试CORS代理方法:', proxyUrl);
+                        
+                        const response = await fetch(proxyUrl, {
+                            method: 'PROPFIND',
+                            headers: {
+                                'Authorization': this.getAuthHeader(),
+                                'Depth': '0'
+                            }
+                        });
+
+                        if (response.ok) {
+                            this.connectionMethod = 'cors-proxy';
+                            this.config.corsProxyUrl = proxyBase;
+                            console.log('CORS代理连接成功');
+                            return true;
+                        }
+                    } catch (error) {
+                        console.warn(`CORS代理 ${proxyBase} 失败:`, error);
+                    }
+                }
+                
+                throw new Error('所有CORS代理服务都失败');
+            }
+
+            // 判断是否使用代理
+            isUsingProxy() {
+                return this.connectionMethod === 'proxy' || this.connectionMethod === 'cors-proxy';
+            }
+
+            // 获取代理请求URL
+            getProxyRequestUrl(path) {
+                if (this.connectionMethod === 'cors-proxy' && this.config.corsProxyUrl) {
+                    const targetUrl = encodeURIComponent(this.getRequestUrl(path));
+                    return this.config.corsProxyUrl + targetUrl;
+                }
+                
+                // 自定义代理
+                const proxyUrl = this.config.proxyUrl.replace(/\/$/, '');
+                const targetPath = path.replace(/^\//, '');
+                return `${proxyUrl}/${targetPath}`;
+            }
+
+            // 测试连接 - 增强版CORS错误处理
             async testConnection(silent = false) {
                 const statusEl = document.getElementById('davConnectionStatus');
                 if (!silent) {
@@ -3134,46 +3459,41 @@
                     statusEl.querySelector('.sync-text').textContent = '正在连接坚果云...';
                 }
 
-                try {
-                    const url = this.getRequestUrl('/');
-                    console.log('Testing connection to:', url);
-                    
-                    const response = await fetch(url, {
-                        method: 'PROPFIND',
-                        headers: {
-                            ...this.getHeaders(),
-                            'Depth': '0'
-                        }
-                    });
+                // 尝试多种连接方式
+                const connectionMethods = [
+                    () => this.testDirectConnection(),
+                    () => this.testProxyConnection(),
+                    () => this.testCORSProxyConnection()
+                ];
 
-                    if (response.ok) {
-                        if (!silent) {
-                            statusEl.className = 'sync-status-bar success';
-                            statusEl.querySelector('.sync-text').textContent = '连接成功！';
+                for (let i = 0; i < connectionMethods.length; i++) {
+                    try {
+                        const result = await connectionMethods[i]();
+                        if (result) {
+                            if (!silent) {
+                                statusEl.className = 'sync-status-bar success';
+                                statusEl.querySelector('.sync-text').textContent = `连接成功！ (方法${i + 1})`;
+                            }
+                            this.updateSyncStatus('连接正常', 'success');
+                            return true;
                         }
-                        this.updateSyncStatus('连接正常', 'success');
-                        return true;
-                    } else {
-                        throw new Error(`服务器响应错误: ${response.status}`);
+                    } catch (error) {
+                        console.warn(`连接方法${i + 1}失败:`, error);
+                        // 继续尝试下一种方法
                     }
-                } catch (error) {
-                    console.error('Connection failed:', error);
-                    if (!silent) {
-                        statusEl.className = 'sync-status-bar error';
-                        statusEl.querySelector('.sync-text').textContent = '连接失败: ' + error.message;
-                    }
-                    
-                    let errorMsg = '连接失败';
-                    if (error.message.includes('Failed to fetch')) {
-                        errorMsg = '网络错误或跨域限制，请尝试配置代理';
-                    } else if (error.message.includes('401')) {
-                        errorMsg = '认证失败，请检查账号密码';
-                    }
-                    
-                    this.updateSyncStatus(errorMsg, 'error');
-                    if (!silent) showToast(errorMsg, 'error');
-                    return false;
                 }
+
+                // 所有方法都失败
+                if (!silent) {
+                    statusEl.className = 'sync-status-bar error';
+                    statusEl.querySelector('.sync-text').textContent = '所有连接方法都失败';
+                }
+                
+                this.updateSyncStatus('连接失败：跨域限制或网络问题', 'error');
+                if (!silent) {
+                    showToast('连接失败：请检查网络连接或尝试配置代理服务', 'error');
+                }
+                return false;
             }
 
             // 上传数据

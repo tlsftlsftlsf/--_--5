@@ -54,6 +54,7 @@
             constructor() {
                 this.config = this.loadConfig();
                 this.isSyncing = false;
+                this.connectionMethod = 'direct'; // 新增：记录连接方式
             }
 
             loadConfig() {
@@ -113,16 +114,52 @@
                 return serverUrl + path;
             }
 
-            getHeaders() {
+            getHeaders(method = 'GET') {
                 const headers = {
-                    'Authorization': this.getAuthHeader()
+                    'Authorization': this.getAuthHeader(),
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-Type': 'application/json'
                 };
+                
                 if (this.config.proxyUrl) {
                     let serverUrl = this.config.serverUrl;
                     if (serverUrl.endsWith('/')) serverUrl = serverUrl.slice(0, -1);
                     headers['X-Target-Url'] = serverUrl;
+                    headers['X-Requested-With'] = 'XMLHttpRequest';
                 }
+                
+                // 添加CORS相关头部
+                if (this.isUsingProxy()) {
+                    headers['Access-Control-Allow-Origin'] = '*';
+                    headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS, PROPFIND, MKCOL';
+                    headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Target-Url, X-Requested-With';
+                }
+                
                 return headers;
+            }
+
+            // 判断是否使用代理
+            isUsingProxy() {
+                return this.connectionMethod === 'proxy' || this.connectionMethod === 'cors-proxy';
+            }
+
+            // 获取代理请求URL
+            getProxyRequestUrl(path) {
+                if (this.connectionMethod === 'cors-proxy' && this.config.corsProxyUrl) {
+                    const targetUrl = encodeURIComponent(this.getDirectRequestUrl(path));
+                    return this.config.corsProxyUrl + targetUrl;
+                }
+                
+                const proxyUrl = this.config.proxyUrl.replace(/\/$/, '');
+                const targetPath = path.replace(/^\//, '');
+                return `${proxyUrl}/${targetPath}`;
+            }
+
+            // 获取直接请求URL
+            getDirectRequestUrl(path) {
+                const baseUrl = this.config.serverUrl.replace(/\/$/, '');
+                const targetPath = path.replace(/^\//, '');
+                return `${baseUrl}/${targetPath}`;
             }
 
             async resolveConflict(local, remote) {
