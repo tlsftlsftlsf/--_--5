@@ -5579,33 +5579,88 @@
             }
         }
         
-        // WebDAV连接测试
-        async function testWebDAVConnection(config = nutcloudConfig) {
+        // WebDAV连接测试 - 修复CORS跨域问题
+        async function testWebDAVConnection(config = nutcloudConfig, retryCount = 0) {
+            const maxRetries = 2;
+            
             if (!config.username || !config.appPassword) {
                 throw new Error('请先配置坚果云账号信息');
             }
             
             try {
+                console.log(`尝试WebDAV连接... (尝试 ${retryCount + 1}/${maxRetries + 1})`);
+                
                 const response = await fetch(config.server, {
                     method: 'PROPFIND',
+                    mode: 'cors',
+                    credentials: 'omit',
                     headers: {
                         'Authorization': 'Basic ' + btoa(config.username + ':' + config.appPassword),
-                        'Depth': '0'
+                        'Depth': '0',
+                        'Content-Type': 'application/xml'
                     }
                 });
                 
                 if (response.ok) {
+                    console.log('WebDAV连接测试成功');
                     return true;
                 } else {
-                    throw new Error('连接失败，请检查账号信息');
+                    // 根据状态码提供更详细的错误信息
+                    let errorMessage = '连接失败';
+                    switch (response.status) {
+                        case 401:
+                            errorMessage = '认证失败，请检查用户名和应用密码是否正确';
+                            break;
+                        case 403:
+                            errorMessage = '访问被拒绝，请检查账号权限';
+                            break;
+                        case 404:
+                            errorMessage = '服务器地址错误或服务不可用';
+                            break;
+                        case 500:
+                            errorMessage = '服务器内部错误，请稍后重试';
+                            break;
+                        default:
+                            errorMessage = `连接失败 (状态码: ${response.status})`;
+                    }
+                    throw new Error(errorMessage);
                 }
             } catch (error) {
                 console.error('WebDAV连接测试失败:', error);
-                throw new Error('网络连接失败: ' + error.message);
+                
+                // CORS错误特殊处理
+                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                    // 如果是CORS错误且还有重试次数，则重试
+                    if (retryCount < maxRetries) {
+                        console.log(`CORS错误，${1000 * (retryCount + 1)}ms后重试...`);
+                        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+                        return testWebDAVConnection(config, retryCount + 1);
+                    }
+                    
+                    const errorDetail = [
+                        '检测到跨域请求被阻止 (CORS Error)',
+                        '',
+                        '可能的解决方案:',
+                        '1. 检查网络连接是否正常',
+                        '2. 尝试刷新页面后重新测试',
+                        '3. 如果问题持续，建议使用本地导出功能备份数据',
+                        '4. 或者尝试使用其他云存储服务',
+                        '',
+                        '技术详情: 浏览器阻止了从GitHub Pages到坚果云的跨域请求'
+                    ].join('\n');
+                    throw new Error(errorDetail);
+                }
+                
+                // 网络错误处理
+                if (error.name === 'TypeError') {
+                    throw new Error('网络连接失败，请检查网络设置或稍后重试');
+                }
+                
+                throw error;
             }
         }
         
-        // 上传文件到坚果云
+        // 上传文件到坚果云 - 增强错误处理
         async function uploadToNutcloud(data = pointsData, filename = null) {
             if (!nutcloudConfig.username || !nutcloudConfig.appPassword) {
                 showToast('请先配置坚果云账号信息', 'error');
@@ -5627,6 +5682,8 @@
                 
                 const response = await fetch(nutcloudConfig.server + filePath, {
                     method: 'PUT',
+                    mode: 'cors',
+                    credentials: 'omit',
                     headers: {
                         'Authorization': 'Basic ' + btoa(nutcloudConfig.username + ':' + nutcloudConfig.appPassword),
                         'Content-Type': 'application/json'
@@ -5638,16 +5695,41 @@
                     showToast(`数据已成功上传到坚果云！\n文件名: ${fileName}`, 'success');
                     return true;
                 } else {
-                    throw new Error('上传失败，状态码: ' + response.status);
+                    let errorMessage = '上传失败';
+                    switch (response.status) {
+                        case 401:
+                            errorMessage = '认证失败，请检查用户名和应用密码';
+                            break;
+                        case 403:
+                            errorMessage = '上传权限不足，请检查账号设置';
+                            break;
+                        case 404:
+                            errorMessage = '目标路径不存在或无法访问';
+                            break;
+                        case 413:
+                            errorMessage = '文件太大，上传失败';
+                            break;
+                        case 507:
+                            errorMessage = '存储空间不足';
+                            break;
+                        default:
+                            errorMessage = `上传失败 (状态码: ${response.status})`;
+                    }
+                    throw new Error(errorMessage);
                 }
             } catch (error) {
                 console.error('上传到坚果云失败:', error);
-                showToast('上传失败: ' + error.message, 'error');
+                
+                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                    showToast('网络连接失败，请检查网络设置或稍后重试\n\n建议使用本地导出功能作为备选方案', 'error');
+                } else {
+                    showToast('上传失败: ' + error.message, 'error');
+                }
                 return false;
             }
         }
         
-        // 从坚果云下载文件
+        // 从坚果云下载文件 - 增强错误处理
         async function downloadFromNutcloud() {
             if (!nutcloudConfig.username || !nutcloudConfig.appPassword) {
                 showToast('请先配置坚果云账号信息', 'error');
@@ -5666,19 +5748,43 @@
                 
                 const response = await fetch(nutcloudConfig.server + nutcloudConfig.backupPath, {
                     method: 'PROPFIND',
+                    mode: 'cors',
+                    credentials: 'omit',
                     headers: {
                         'Authorization': 'Basic ' + btoa(nutcloudConfig.username + ':' + nutcloudConfig.appPassword),
-                        'Depth': '1'
+                        'Depth': '1',
+                        'Content-Type': 'application/xml'
                     }
                 });
                 
                 if (!response.ok) {
-                    throw new Error('无法访问备份目录');
+                    let errorMessage = '无法访问备份目录';
+                    switch (response.status) {
+                        case 401:
+                            errorMessage = '认证失败，请检查用户名和应用密码';
+                            break;
+                        case 403:
+                            errorMessage = '访问权限不足，请检查账号设置';
+                            break;
+                        case 404:
+                            errorMessage = '备份目录不存在';
+                            break;
+                        default:
+                            errorMessage = `无法访问备份目录 (状态码: ${response.status})`;
+                    }
+                    throw new Error(errorMessage);
                 }
                 
                 const text = await response.text();
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(text, 'text/xml');
+                
+                // 检查XML解析是否成功
+                const parserError = xmlDoc.getElementsByTagName('parsererror')[0];
+                if (parserError) {
+                    throw new Error('服务器响应格式错误');
+                }
+                
                 const responses = xmlDoc.getElementsByTagName('d:response');
                 
                 const backupFiles = [];
@@ -5696,7 +5802,7 @@
                 }
                 
                 if (backupFiles.length === 0) {
-                    showToast('未找到备份文件', 'error');
+                    showToast('未找到备份文件，请先上传数据到云端', 'error');
                     return false;
                 }
                 
@@ -5705,7 +5811,12 @@
                 
             } catch (error) {
                 console.error('从坚果云下载失败:', error);
-                showToast('下载失败: ' + error.message, 'error');
+                
+                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                    showToast('网络连接失败，请检查网络设置或稍后重试\n\n建议使用本地导入功能', 'error');
+                } else {
+                    showToast('下载失败: ' + error.message, 'error');
+                }
                 return false;
             }
         }
@@ -5769,27 +5880,43 @@
             };
         }
         
-        // 下载选中的文件
+        // 下载选中的文件 - 增强错误处理
         async function downloadSelectedFile(fileUrl, fileName) {
             try {
                 showToast('正在下载文件...', 'info');
                 
                 const response = await fetch(fileUrl, {
                     method: 'GET',
+                    mode: 'cors',
+                    credentials: 'omit',
                     headers: {
                         'Authorization': 'Basic ' + btoa(nutcloudConfig.username + ':' + nutcloudConfig.appPassword)
                     }
                 });
                 
                 if (!response.ok) {
-                    throw new Error('下载失败，状态码: ' + response.status);
+                    let errorMessage = '下载失败';
+                    switch (response.status) {
+                        case 401:
+                            errorMessage = '认证失败，请检查用户名和应用密码';
+                            break;
+                        case 403:
+                            errorMessage = '访问被拒绝，无下载权限';
+                            break;
+                        case 404:
+                            errorMessage = '文件不存在或已被删除';
+                            break;
+                        default:
+                            errorMessage = `下载失败 (状态码: ${response.status})`;
+                    }
+                    throw new Error(errorMessage);
                 }
                 
                 const data = await response.json();
                 
                 // 验证数据格式
                 if (!isValidPointsData(data)) {
-                    throw new Error('文件格式不正确');
+                    throw new Error('文件格式不正确或数据损坏');
                 }
                 
                 // 确认恢复操作
@@ -5818,7 +5945,12 @@
                 
             } catch (error) {
                 console.error('下载文件失败:', error);
-                showToast('下载失败: ' + error.message, 'error');
+                
+                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                    showToast('网络连接失败，请检查网络设置或稍后重试', 'error');
+                } else {
+                    showToast('下载失败: ' + error.message, 'error');
+                }
             }
         }
         
@@ -5978,6 +6110,107 @@
         }
         
         // ================== 坚果云WebDAV功能结束 ==================
+        
+        // 增强的错误处理和用户指导
+        function showWebDAVErrorHelp(error) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;
+                z-index: 10000;
+            `;
+            
+            const isCorsError = error.message.includes('CORS') || error.message.includes('跨域');
+            const helpContent = isCorsError ? `
+                <h3 style="margin-bottom: 20px; color: var(--theme-text);">🔧 云端备份遇到问题</h3>
+                <div style="text-align: left; margin-bottom: 20px; line-height: 1.6;">
+                    <div style="margin-bottom: 15px; padding: 15px; background: rgba(255, 193, 7, 0.1); border-left: 4px solid #ffc107; border-radius: 8px;">
+                        <strong>检测到跨域连接问题</strong><br>
+                        这是由于浏览器的安全策略导致的，不是系统错误。
+                    </div>
+                    
+                    <h4 style="margin: 15px 0 10px 0; color: var(--theme-text);">推荐解决方案：</h4>
+                    <ol style="margin: 10px 0; padding-left: 20px;">
+                        <li style="margin-bottom: 8px;"><strong>使用本地导出功能</strong> - 点击"导出数据"按钮，将数据保存为文本文件</li>
+                        <li style="margin-bottom: 8px;"><strong>手动上传到坚果云</strong> - 将导出的文件通过坚果云网页版上传</li>
+                        <li style="margin-bottom: 8px;"><strong>尝试其他浏览器</strong> - 某些浏览器对跨域限制更宽松</li>
+                    </ol>
+                    
+                    <h4 style="margin: 15px 0 10px 0; color: var(--theme-text);">备选云存储方案：</h4>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li style="margin-bottom: 5px;">百度网盘、阿里云盘等支持WebDAV的服务</li>
+                        <li style="margin-bottom: 5px;">Dropbox、OneDrive等国际云存储</li>
+                        <li style="margin-bottom: 5px;">自建WebDAV服务器</li>
+                    </ul>
+                </div>
+            ` : `
+                <h3 style="margin-bottom: 20px; color: var(--theme-text);">⚠️ 连接失败</h3>
+                <div style="text-align: left; margin-bottom: 20px; line-height: 1.6;">
+                    <div style="margin-bottom: 15px; padding: 15px; background: rgba(220, 53, 69, 0.1); border-left: 4px solid #dc3545; border-radius: 8px;">
+                        <strong>错误详情：</strong><br>
+                        ${error.message}
+                    </div>
+                    
+                    <h4 style="margin: 15px 0 10px 0; color: var(--theme-text);">请检查：</h4>
+                    <ol style="margin: 10px 0; padding-left: 20px;">
+                        <li style="margin-bottom: 8px;">网络连接是否正常</li>
+                        <li style="margin-bottom: 8px;">坚果云账号和应用密码是否正确</li>
+                        <li style="margin-bottom: 8px;">坚果云服务是否正常</li>
+                    </ol>
+                </div>
+            `;
+            
+            modal.innerHTML = `
+                <div style="
+                    background: var(--theme-bg); padding: 30px; border-radius: var(--border-radius);
+                    max-width: 600px; width: 90%; text-align: center; box-shadow: var(--card-shadow);
+                ">
+                    ${helpContent}
+                    
+                    <div style="display: flex; gap: 15px; justify-content: center; margin-top: 25px;">
+                        <button onclick="showLocalBackupGuide(); closeWebDAVErrorModal();" style="
+                            padding: 15px 25px; border: none; border-radius: 12px;
+                            background: var(--success-gradient); color: white; font-weight: 600;
+                            cursor: pointer;
+                        ">📁 查看本地备份指南</button>
+                        <button onclick="closeWebDAVErrorModal()" style="
+                            padding: 15px 25px; border: 2px solid #dee2e6; border-radius: 12px;
+                            background: white; color: #6c757d; font-weight: 600; cursor: pointer;
+                        ">关闭</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // 绑定全局函数
+            window.closeWebDAVErrorModal = () => {
+                document.body.removeChild(modal);
+                delete window.closeWebDAVErrorModal;
+            };
+            
+            window.showLocalBackupGuide = () => {
+                // 显示本地备份指南
+                showToast('请在管理员面板中点击"导出数据"按钮', 'info');
+            };
+        }
+        
+        // 全局错误处理函数
+        window.handleWebDAVError = function(error) {
+            console.error('WebDAV操作失败:', error);
+            
+            // 如果是网络或CORS错误，显示详细帮助
+            if (error.name === 'TypeError' || 
+                error.message.includes('Failed to fetch') || 
+                error.message.includes('CORS') ||
+                error.message.includes('跨域')) {
+                showWebDAVErrorHelp(error);
+            } else {
+                // 其他错误直接显示
+                showToast('操作失败: ' + error.message, 'error');
+            }
+        };
+        
 
     </script>
 </body>
